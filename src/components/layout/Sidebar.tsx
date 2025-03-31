@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   BookOpen,
-  Home,
   LayoutGrid,
   LogOut,
   Mic2,
@@ -27,7 +26,6 @@ interface NavItem {
 }
 
 const MainNavItems: NavItem[] = [
-  { icon: Home, label: "Home", href: "/" },
   { icon: LayoutGrid, label: "Dashboard", href: "/dashboard" },
   { icon: Music, label: "Browse Songs", href: "/songs" },
   { icon: BookOpen, label: "Lyric Learning", href: "/lyric-learning" },

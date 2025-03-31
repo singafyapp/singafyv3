@@ -1,53 +1,34 @@
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Module } from "@/types";
+import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 
 interface ContinueLearningCardProps {
   module: Module;
-  className?: string;
 }
 
-export function ContinueLearningCard({ module, className }: ContinueLearningCardProps) {
+export function ContinueLearningCard({ module }: ContinueLearningCardProps) {
   return (
-    <Card className={cn("bg-spotify-darkgray border-white/5 hover-scale overflow-hidden", className)}>
-      <CardHeader className="pb-2">
-        <div className="flex items-start gap-4">
-          <div className="flex items-center justify-center w-12 h-12 rounded-md bg-primary/10 text-primary">
-            <span className="text-2xl" dangerouslySetInnerHTML={{ __html: module.icon }} />
+    <Link to={module.path} className="block">
+      <div className="glass-card rounded-lg p-5 hover:bg-white/5 transition-colors">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="bg-white/10 text-primary rounded-full w-10 h-10 flex items-center justify-center text-lg font-medium">
+            {module.icon}
           </div>
           <div>
-            <CardTitle className="text-md font-medium">{module.title}</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-1">
-              {module.description}
-            </CardDescription>
+            <h3 className="font-medium">{module.title}</h3>
+            <p className="text-xs text-muted-foreground">{module.description}</p>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="pb-2">
-        {module.progress !== undefined && (
-          <div className="space-y-1">
-            <Progress value={module.progress} className="h-1" />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Progress</span>
-              <span>{Math.round(module.progress)}%</span>
-            </div>
+        
+        <div>
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="text-muted-foreground">Progress</span>
+            <span>{module.progress}%</span>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="pt-2">
-        <Button asChild variant="ghost" className="w-full text-primary hover:bg-primary/10 hover:text-primary">
-          <Link to={module.path}>
-            Continue
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Link>
-        </Button>
-      </CardFooter>
-    </Card>
+          <Progress value={module.progress} className="h-1.5" />
+        </div>
+      </div>
+    </Link>
   );
 }
