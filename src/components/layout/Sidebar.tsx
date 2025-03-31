@@ -4,10 +4,12 @@ import { cn } from "@/lib/utils";
 import {
   BarChart3,
   BookOpen,
+  Heart,
   LayoutGrid,
   LogOut,
   Mic2,
   Music,
+  Music2,
   Settings,
   UserCircle
 } from "lucide-react";
@@ -29,6 +31,7 @@ interface NavItem {
 const MainNavItems: NavItem[] = [
   { icon: LayoutGrid, label: "Dashboard", href: "/" },
   { icon: Music, label: "Browse Songs", href: "/songs" },
+  { icon: Heart, label: "Favorites", href: "/favorites" },
   { icon: BookOpen, label: "Lyric Learning", href: "/lyric-learning" },
   { icon: Mic2, label: "Practice", href: "/practice" },
   { icon: BarChart3, label: "Progress", href: "/progress" },
@@ -59,12 +62,13 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="flex items-center p-4 h-16">
         {!collapsed && (
           <Link to="/" className="flex items-center">
+            <Music2 className="h-6 w-6 mr-2 text-primary animate-pulse filter drop-shadow-[0_0_8px_#1EAEDB]" />
             <span className="text-xl font-bold text-gradient">Singafy</span>
           </Link>
         )}
         {collapsed && (
           <Link to="/" className="w-full flex justify-center">
-            <span className="text-2xl font-bold text-primary">S</span>
+            <Music2 className="h-6 w-6 text-primary animate-pulse filter drop-shadow-[0_0_8px_#1EAEDB]" />
           </Link>
         )}
       </div>

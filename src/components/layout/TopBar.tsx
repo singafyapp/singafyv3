@@ -1,6 +1,6 @@
 
 import { Link, useNavigate } from "react-router-dom";
-import { Bell, Menu, Search, LogOut, User, Settings, HelpCircle } from "lucide-react";
+import { Bell, Menu, LogOut, User, Settings, HelpCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -39,14 +38,6 @@ export default function TopBar({ toggleSidebar }: TopBarProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-        </div>
-
-        <div className="hidden md:flex items-center relative max-w-md w-full">
-          <Search className="h-4 w-4 absolute left-3 text-muted-foreground" />
-          <Input 
-            placeholder="Search songs, artists, lyrics..." 
-            className="pl-9 bg-spotify-lightgray border-none focus-visible:ring-1 focus-visible:ring-primary"
-          />
         </div>
 
         <div className="flex items-center gap-2">

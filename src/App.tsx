@@ -11,6 +11,7 @@ import LyricLearning from "./pages/LyricLearning";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Songs from "./pages/Songs";
+import Favorites from "./pages/Favorites";
 import Practice from "./pages/Practice";
 import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/dashboard" element={<Navigate to="/" replace />} />
               <Route path="/lyric-learning" element={<LyricLearning />} />
               <Route path="/songs" element={<Songs />} />
+              <Route path="/favorites" element={<Favorites />} />
               <Route path="/practice" element={<Practice />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="/word-focus" element={<WordFocus />} />

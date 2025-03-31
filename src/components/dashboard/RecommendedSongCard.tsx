@@ -1,137 +1,109 @@
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Heart, Languages, PlayCircle } from "lucide-react";
 import { Song } from "@/types";
+import { Clock, Heart, BookOpen, Mic } from "lucide-react";
+import { formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface RecommendedSongCardProps {
   song: Song;
-  layout?: "horizontal" | "vertical";
-  size?: "sm" | "md" | "lg";
-  onClick?: () => void;
+  onFavorite?: () => void;
+  onLearn?: () => void;
+  onPractice?: () => void;
+  showActions?: boolean;
 }
 
-export function RecommendedSongCard({
-  song,
-  layout = "vertical",
-  size = "md",
-  onClick,
+export function RecommendedSongCard({ 
+  song, 
+  onFavorite,
+  onLearn,
+  onPractice,
+  showActions = false 
 }: RecommendedSongCardProps) {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return "bg-green-500/20 text-green-500 hover:bg-green-500/30";
-      case "intermediate":
-        return "bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30";
-      case "advanced":
-        return "bg-red-500/20 text-red-500 hover:bg-red-500/30";
-      default:
-        return "bg-primary/20 text-primary hover:bg-primary/30";
+  const [isFavorite, setIsFavorite] = useState(false);
+  
+  const handleFavoriteClick = () => {
+    setIsFavorite(!isFavorite);
+    if (onFavorite) {
+      onFavorite();
     }
   };
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-  };
-
-  if (layout === "horizontal") {
-    return (
-      <div 
-        onClick={onClick}
-        className={cn(
-          "flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-white/5 transition",
-          size === "sm" && "gap-2 p-1.5",
-          size === "lg" && "gap-4 p-3"
-        )}
-      >
-        <div className={cn(
-          "relative overflow-hidden rounded-md aspect-square bg-spotify-lightgray flex-shrink-0",
-          size === "sm" && "w-12 h-12",
-          size === "md" && "w-16 h-16",
-          size === "lg" && "w-20 h-20"
-        )}>
-          <img
-            src={song.albumCover}
-            alt={`${song.title} by ${song.artist}`}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
-            <PlayCircle className="text-primary h-8 w-8" />
-          </div>
-        </div>
-        <div className="flex-1">
-          <h4 className={cn(
-            "font-medium line-clamp-1",
-            size === "sm" && "text-sm",
-            size === "md" && "text-base",
-            size === "lg" && "text-lg"
-          )}>{song.title}</h4>
-          <p className="text-muted-foreground line-clamp-1 text-sm">{song.artist}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-              {song.language.flag}
-            </Badge>
-            <Badge 
-              variant="outline"
-              className={cn(
-                "text-xs px-1.5 py-0 border-0 h-5",
-                getDifficultyColor(song.difficulty)
-              )}
-            >
-              {song.difficulty}
-            </Badge>
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          {formatDuration(song.duration)}
-        </div>
-      </div>
-    );
-  }
-
+  
   return (
-    <Card 
-      onClick={onClick}
-      className="bg-spotify-darkgray border-white/5 hover-scale overflow-hidden cursor-pointer"
-    >
-      <div className="relative aspect-square bg-spotify-lightgray">
+    <div className="glass-card rounded-md overflow-hidden flex flex-col hover-scale">
+      <div className="relative">
         <img
           src={song.albumCover}
-          alt={`${song.title} by ${song.artist}`}
-          className="w-full h-full object-cover"
+          alt={`${song.title} cover`}
+          className="w-full aspect-square object-cover"
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
-          <PlayCircle className="text-primary h-12 w-12" />
+        <div className="absolute top-2 right-2 flex space-x-1">
+          <span className="text-xs bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
+            {song.language.flag} {song.language.name}
+          </span>
         </div>
+        {showActions && (
+          <button 
+            className={cn(
+              "absolute top-2 left-2 p-1.5 bg-black/60 backdrop-blur-sm rounded-full transition-all",
+              isFavorite && "text-red-500"
+            )}
+            onClick={handleFavoriteClick}
+          >
+            <Heart className="h-4 w-4" fill={isFavorite ? "currentColor" : "none"} />
+          </button>
+        )}
       </div>
-      <CardContent className="p-3">
-        <CardTitle className="text-base line-clamp-1">{song.title}</CardTitle>
-        <CardDescription className="text-sm line-clamp-1 mt-0.5">{song.artist}</CardDescription>
+      <div className="p-3 flex-1 flex flex-col">
+        <h3 className="font-medium text-sm truncate" title={song.title}>
+          {song.title}
+        </h3>
+        <p className="text-xs text-muted-foreground truncate" title={song.artist}>
+          {song.artist}
+        </p>
         
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center gap-1">
-            <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-              {song.language.flag}
-            </Badge>
-            <Badge 
-              variant="outline"
-              className={cn(
-                "text-xs px-1.5 py-0 border-0 h-5",
-                getDifficultyColor(song.difficulty)
-              )}
-            >
-              {song.difficulty}
-            </Badge>
-          </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
-            <Heart className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5 text-xs text-muted-foreground">
+          <span className="flex items-center">
+            <Clock className="h-3 w-3 mr-1" />
+            {formatTime(song.duration)}
+          </span>
+          <span className={cn(
+            "px-1.5 py-0.5 rounded text-[10px] uppercase",
+            song.difficulty === "beginner" ? "bg-green-950/50 text-green-400" :
+            song.difficulty === "intermediate" ? "bg-yellow-950/50 text-yellow-400" :
+            "bg-red-950/50 text-red-400"
+          )}>
+            {song.difficulty}
+          </span>
         </div>
-      </CardContent>
-    </Card>
+        
+        {showActions && (
+          <div className="mt-3 flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="secondary" className="text-xs">Practice with this song</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-spotify-lightgray border-white/10">
+                <DropdownMenuItem onClick={onLearn} className="cursor-pointer">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  <span>Lyric Learning</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onPractice} className="cursor-pointer">
+                  <Mic className="h-4 w-4 mr-2" />
+                  <span>Practice</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
