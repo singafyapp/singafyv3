@@ -1,15 +1,11 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
 import { User } from '@/types';
 
-// Initialize Supabase client - replace with actual values when connecting to Supabase
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-
-// Note: In a real app, you would get these from environment variables
-// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-// const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Initialize Supabase client
+// Using placeholder values that will work with the client library
+const supabaseUrl = 'https://your-project-url.supabase.co';
+const supabaseKey = 'your-anon-key';
 
 // Create a single supabase client for interacting with your database
 const supabase = createClient(supabaseUrl, supabaseKey);
