@@ -4,51 +4,25 @@ import spotifyService from '@/services/spotify';
 import { toast } from '@/hooks/use-toast';
 
 export function useSpotify() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    checkAuthentication();
+    checkConnection();
   }, []);
 
-  async function checkAuthentication() {
-    setIsLoading(true);
-    const isAuth = spotifyService.isAuthenticated();
-    setIsAuthenticated(isAuth);
-    
-    if (isAuth) {
-      try {
-        const profile = await spotifyService.getUserProfile();
-        setUserProfile(profile);
-      } catch (error) {
-        console.error('Failed to fetch user profile:', error);
-      }
-    }
-    
-    setIsLoading(false);
-  }
-
-  async function handleAuthCallback(code: string) {
+  async function checkConnection() {
     setIsLoading(true);
     try {
-      const success = await spotifyService.handleAuthCallback(code);
-      setIsAuthenticated(success);
-      
-      if (success) {
-        toast({
-          title: "Success!",
-          description: "Your Spotify account has been connected.",
-        });
-        
-        const profile = await spotifyService.getUserProfile();
-        setUserProfile(profile);
-      }
+      // Try to get a valid token to confirm API is working
+      const token = await spotifyService.getValidToken();
+      setIsConnected(!!token);
     } catch (error) {
-      console.error('Error handling auth callback:', error);
+      console.error('Failed to connect to Spotify API:', error);
+      setIsConnected(false);
       toast({
-        title: "Connection Failed",
-        description: "Could not connect to Spotify. Please try again.",
+        title: "Spotify Connection Issue",
+        description: "Could not connect to Spotify API. Some features may be limited.",
         variant: "destructive",
       });
     } finally {
@@ -56,28 +30,10 @@ export function useSpotify() {
     }
   }
 
-  function connect() {
-    const authUrl = spotifyService.getAuthUrl();
-    window.location.href = authUrl;
-  }
-
-  function disconnect() {
-    spotifyService.logout();
-    setIsAuthenticated(false);
-    setUserProfile(null);
-    toast({
-      title: "Disconnected",
-      description: "Your Spotify account has been disconnected.",
-    });
-  }
-
   return {
-    isAuthenticated,
+    isConnected,
     isLoading,
-    userProfile,
-    connect,
-    disconnect,
-    handleAuthCallback,
+    checkConnection
   };
 }
 

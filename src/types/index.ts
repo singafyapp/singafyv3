@@ -76,3 +76,26 @@ export interface Module {
   path: string;
   progress?: number;
 }
+
+export interface LanguageOption {
+  id: string;
+  name: string;
+  code: string;
+  flag: string;
+}
+
+// Define all available languages in the app
+export const availableLanguages: LanguageOption[] = [
+  { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
+  { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
+  { id: "3", name: "German", code: "de", flag: "🇩🇪" },
+  { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
+  { id: "5", name: "Korean", code: "ko", flag: "🇰🇷" },
+  { id: "6", name: "Japanese", code: "ja", flag: "🇯🇵" },
+  { id: "7", name: "Portuguese", code: "pt", flag: "🇵🇹" },
+  { id: "8", name: "Russian", code: "ru", flag: "🇷🇺" },
+  { id: "9", name: "Chinese (Mandarin)", code: "zh", flag: "🇨🇳" },
+  { id: "10", name: "Arabic", code: "ar", flag: "🇦🇪" },
+  { id: "11", name: "Dutch", code: "nl", flag: "🇳🇱" },
+  { id: "12", name: "Swedish", code: "sv", flag: "🇸🇪" }
+];

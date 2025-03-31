@@ -28,17 +28,59 @@ interface SpotifySearchResult {
   };
 }
 
+// Helper function to map language code to language object
+function getLanguageForTrack(artistName: string): { id: string; name: string; code: string; flag: string } {
+  // This is a simplified mapping - in a real app, you might want to use a more sophisticated approach
+  const artistNameLower = artistName.toLowerCase();
+  
+  if (artistNameLower.includes('luis') || artistNameLower.includes('fonsi') || 
+      artistNameLower.includes('shakira') || artistNameLower.includes('iglesias')) {
+    return { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" };
+  } else if (artistNameLower.includes('edith') || artistNameLower.includes('piaf') || 
+             artistNameLower.includes('stromae')) {
+    return { id: "2", name: "French", code: "fr", flag: "🇫🇷" };
+  } else if (artistNameLower.includes('rammstein') || artistNameLower.includes('nena')) {
+    return { id: "3", name: "German", code: "de", flag: "🇩🇪" };
+  } else if (artistNameLower.includes('bocelli') || artistNameLower.includes('pausini')) {
+    return { id: "4", name: "Italian", code: "it", flag: "🇮🇹" };
+  } else if (artistNameLower.includes('bts') || artistNameLower.includes('psy')) {
+    return { id: "5", name: "Korean", code: "ko", flag: "🇰🇷" };
+  } else if (artistNameLower.includes('utada') || artistNameLower.includes('babymetal')) {
+    return { id: "6", name: "Japanese", code: "ja", flag: "🇯🇵" };
+  } else if (artistNameLower.includes('amália') || artistNameLower.includes('carvalho')) {
+    return { id: "7", name: "Portuguese", code: "pt", flag: "🇵🇹" };
+  } else if (artistNameLower.includes('tsoi') || artistNameLower.includes('kino')) {
+    return { id: "8", name: "Russian", code: "ru", flag: "🇷🇺" };
+  } else {
+    return { id: "0", name: "Unknown", code: "un", flag: "🌐" };
+  }
+}
+
+// Helper function to determine song difficulty
+function getDifficultyForTrack(track: SpotifyTrack): "beginner" | "intermediate" | "advanced" {
+  // A simple algorithm to determine difficulty based on song length
+  const duration = track.duration_ms / 1000;
+  
+  if (duration < 180) { // Less than 3 minutes
+    return "beginner";
+  } else if (duration < 240) { // Between 3-4 minutes
+    return "intermediate";
+  } else { // More than 4 minutes
+    return "advanced";
+  }
+}
+
 export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Song[]>([]);
   const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
-  const { isAuthenticated, connect } = useSpotify();
+  const { isConnected, isLoading } = useSpotify();
   const navigate = useNavigate();
 
   // Load initial recommended songs
   useEffect(() => {
-    // Sample songs data
+    // Sample songs data with expanded language options
     const sampleSongs: Song[] = [
       {
         id: "1",
@@ -78,21 +120,39 @@ export default function Songs() {
       },
       {
         id: "5",
-        title: "Macarena",
-        artist: "Los del Río",
+        title: "Gangnam Style",
+        artist: "PSY",
         albumCover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&h=300",
-        duration: 226,
+        duration: 219,
         difficulty: "beginner",
-        language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
+        language: { id: "5", name: "Korean", code: "ko", flag: "🇰🇷" },
       },
       {
         id: "6",
-        title: "Gasolina",
-        artist: "Daddy Yankee",
+        title: "Sukiyaki",
+        artist: "Kyu Sakamoto",
         albumCover: "https://images.unsplash.com/photo-1593698054589-8c14bb66d2fd?auto=format&fit=crop&w=300&h=300",
         duration: 192,
         difficulty: "intermediate",
-        language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
+        language: { id: "6", name: "Japanese", code: "ja", flag: "🇯🇵" },
+      },
+      {
+        id: "7",
+        title: "Ai Se Eu Te Pego",
+        artist: "Michel Teló",
+        albumCover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&h=300",
+        duration: 184,
+        difficulty: "beginner",
+        language: { id: "7", name: "Portuguese", code: "pt", flag: "🇵🇹" },
+      },
+      {
+        id: "8",
+        title: "Группа крови",
+        artist: "Кино",
+        albumCover: "https://images.unsplash.com/photo-1593698054589-8c14bb66d2fd?auto=format&fit=crop&w=300&h=300",
+        duration: 251,
+        difficulty: "advanced",
+        language: { id: "8", name: "Russian", code: "ru", flag: "🇷🇺" },
       },
     ];
     
@@ -102,35 +162,27 @@ export default function Songs() {
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
-    if (!isAuthenticated) {
-      toast({
-        title: "Connect to Spotify",
-        description: "You need to connect to your Spotify account to search for songs",
-        action: (
-          <Button size="sm" onClick={connect}>
-            Connect
-          </Button>
-        )
-      });
-      return;
-    }
-    
     setIsSearching(true);
     
     try {
       const result = await spotifyService.searchTracks(searchQuery) as SpotifySearchResult;
       
       if (result && result.tracks && result.tracks.items) {
-        const songs: Song[] = result.tracks.items.map((track: SpotifyTrack) => ({
-          id: track.id,
-          title: track.name,
-          artist: track.artists.map(artist => artist.name).join(", "),
-          albumCover: track.album.images[0]?.url || "",
-          duration: Math.floor(track.duration_ms / 1000),
-          difficulty: "intermediate", // Default difficulty
-          language: { id: "1", name: "Unknown", code: "un", flag: "🌐" }, // Default language
-          spotifyId: track.id
-        }));
+        const songs: Song[] = result.tracks.items.map((track: SpotifyTrack) => {
+          const language = getLanguageForTrack(track.artists[0]?.name || "");
+          const difficulty = getDifficultyForTrack(track);
+          
+          return {
+            id: track.id,
+            title: track.name,
+            artist: track.artists.map(artist => artist.name).join(", "),
+            albumCover: track.album.images[0]?.url || "",
+            duration: Math.floor(track.duration_ms / 1000),
+            difficulty: difficulty,
+            language: language,
+            spotifyId: track.id
+          };
+        });
         
         setSearchResults(songs);
       }
@@ -197,14 +249,14 @@ export default function Songs() {
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <Button onClick={handleSearch} disabled={isSearching}>
+            <Button onClick={handleSearch} disabled={isSearching || isLoading}>
               {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
             </Button>
           </div>
           
-          {!isAuthenticated && (
+          {isLoading && (
             <p className="mt-2 text-sm text-muted-foreground flex items-center">
-              <Disc3 className="h-4 w-4 mr-1" /> Connect your Spotify account to search for songs
+              <Disc3 className="h-4 w-4 mr-1 animate-spin" /> Connecting to Spotify API...
             </p>
           )}
         </div>
