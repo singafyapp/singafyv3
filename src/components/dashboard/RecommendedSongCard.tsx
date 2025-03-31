@@ -18,6 +18,7 @@ interface RecommendedSongCardProps {
   onLearn?: () => void;
   onPractice?: () => void;
   showActions?: boolean;
+  layout?: "horizontal" | "vertical";
 }
 
 export function RecommendedSongCard({ 
@@ -25,7 +26,8 @@ export function RecommendedSongCard({
   onFavorite,
   onLearn,
   onPractice,
-  showActions = false 
+  showActions = false,
+  layout = "vertical"
 }: RecommendedSongCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   
@@ -36,13 +38,24 @@ export function RecommendedSongCard({
     }
   };
   
+  const isHorizontal = layout === "horizontal";
+  
   return (
-    <div className="glass-card rounded-md overflow-hidden flex flex-col hover-scale">
-      <div className="relative">
+    <div className={cn(
+      "glass-card rounded-md overflow-hidden hover-scale",
+      isHorizontal ? "flex flex-row" : "flex flex-col"
+    )}>
+      <div className={cn(
+        "relative",
+        isHorizontal ? "w-16 h-16 flex-shrink-0" : ""
+      )}>
         <img
           src={song.albumCover}
           alt={`${song.title} cover`}
-          className="w-full aspect-square object-cover"
+          className={cn(
+            "object-cover",
+            isHorizontal ? "w-16 h-16" : "w-full aspect-square"
+          )}
         />
         <div className="absolute top-2 right-2 flex space-x-1">
           <span className="text-xs bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
@@ -61,7 +74,10 @@ export function RecommendedSongCard({
           </button>
         )}
       </div>
-      <div className="p-3 flex-1 flex flex-col">
+      <div className={cn(
+        "p-3 flex-1 flex flex-col",
+        isHorizontal && "flex-grow"
+      )}>
         <h3 className="font-medium text-sm truncate" title={song.title}>
           {song.title}
         </h3>

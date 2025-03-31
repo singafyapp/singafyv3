@@ -22,6 +22,12 @@ interface SpotifyTrack {
   duration_ms: number;
 }
 
+interface SpotifySearchResult {
+  tracks?: {
+    items: SpotifyTrack[];
+  };
+}
+
 export default function Songs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -112,9 +118,9 @@ export default function Songs() {
     setIsSearching(true);
     
     try {
-      const result = await spotifyService.searchTracks(searchQuery);
+      const result = await spotifyService.searchTracks(searchQuery) as SpotifySearchResult;
       
-      if (result.tracks?.items) {
+      if (result && result.tracks && result.tracks.items) {
         const songs: Song[] = result.tracks.items.map((track: SpotifyTrack) => ({
           id: track.id,
           title: track.name,
