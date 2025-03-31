@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -13,6 +12,8 @@ import {
   UserCircle
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -26,7 +27,7 @@ interface NavItem {
 }
 
 const MainNavItems: NavItem[] = [
-  { icon: LayoutGrid, label: "Dashboard", href: "/dashboard" },
+  { icon: LayoutGrid, label: "Dashboard", href: "/" },
   { icon: Music, label: "Browse Songs", href: "/songs" },
   { icon: BookOpen, label: "Lyric Learning", href: "/lyric-learning" },
   { icon: Mic2, label: "Practice", href: "/practice" },
@@ -36,11 +37,17 @@ const MainNavItems: NavItem[] = [
 const BottomNavItems: NavItem[] = [
   { icon: Settings, label: "Settings", href: "/settings" },
   { icon: UserCircle, label: "Profile", href: "/profile" },
-  { icon: LogOut, label: "Logout", href: "/login" },
 ];
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const location = useLocation();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
   
   return (
     <aside
@@ -83,6 +90,15 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               collapsed={collapsed}
             />
           ))}
+          <button 
+            onClick={handleLogout}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors hover:bg-white/10 text-muted-foreground"
+            )}
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span className="text-sm font-medium">Logout</span>}
+          </button>
         </div>
       </nav>
     </aside>

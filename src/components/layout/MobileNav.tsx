@@ -1,6 +1,6 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { BarChart3, BookOpen, Home, Music, Search } from "lucide-react";
+import { BarChart3, BookOpen, LayoutGrid as Home, Music, Mic2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function MobileNav() {
@@ -8,9 +8,9 @@ export default function MobileNav() {
 
   const navItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: Search, label: "Search", href: "/search" },
-    { icon: BookOpen, label: "Learn", href: "/lyric-learning" },
     { icon: Music, label: "Songs", href: "/songs" },
+    { icon: BookOpen, label: "Learn", href: "/lyric-learning" },
+    { icon: Mic2, label: "Practice", href: "/practice" },
     { icon: BarChart3, label: "Progress", href: "/progress" },
   ];
 
