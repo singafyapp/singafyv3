@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Language, Song, PracticeExercise } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { MusicIcon, CheckCircle, XCircle, ChevronRight, Mic, Volume2 } from "lucide-react";
+import { MusicIcon, CheckCircle, XCircle, ChevronRight, Mic, Volume2, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { generateExercises } from "@/services/lyricService";
 
 export default function Practice() {
   const [currentLanguage, setCurrentLanguage] = useState<Language>({
@@ -24,7 +25,33 @@ export default function Practice() {
   const [userAnswer, setUserAnswer] = useState("");
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
   const [progress, setProgress] = useState(0);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  useEffect(() => {
+    // Create audio element
+    audioRef.current = new Audio();
+    
+    // Set up audio demo clips
+    const demoClips = [
+      "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
+      "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
+      "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
+    ];
+    
+    // Use a random clip for demo
+    audioRef.current.src = demoClips[Math.floor(Math.random() * demoClips.length)];
+    
+    // Cleanup audio element on unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+  
   useEffect(() => {
     // Load selected song from local storage
     const savedSong = localStorage.getItem('selectedSong');
@@ -34,56 +61,27 @@ export default function Practice() {
       setCurrentLanguage(song.language);
       
       // Generate practice exercises for this song
-      generateExercises(song);
+      const generatedExercises = generateExercises(song);
+      setExercises(generatedExercises);
     }
   }, []);
 
-  const generateExercises = (song: Song) => {
-    // In a real app, you would fetch exercises from a server
-    // Here we'll generate some mock exercises based on the song
-    const mockExercises: PracticeExercise[] = [
-      {
-        id: "1",
-        type: "multiple-choice",
-        question: `What language is "${song.title}" by ${song.artist} in?`,
-        options: ["English", song.language.name, "Italian", "French"],
-        correctAnswer: song.language.name,
-        songId: song.id
-      },
-      {
-        id: "2",
-        type: "fill-in-blank",
-        question: `Complete this sentence: "${song.title}" was performed by _______.`,
-        correctAnswer: song.artist,
-        songId: song.id
-      },
-      {
-        id: "3",
-        type: "multiple-choice",
-        question: "Which of these words would you likely hear in this song?",
-        options: ["Hello", "Love", "Goodbye", "Dance"],
-        correctAnswer: "Love",
-        songId: song.id
-      },
-      {
-        id: "4",
-        type: "listening",
-        question: "Listen to the clip and select what you hear:",
-        options: ["Phrase 1", "Phrase 2", "Phrase 3", "Phrase 4"],
-        correctAnswer: "Phrase 2",
-        songId: song.id
-      },
-      {
-        id: "5",
-        type: "speaking",
-        question: "Repeat the following phrase:",
-        correctAnswer: "Sample phrase in " + song.language.name,
-        songId: song.id
+  const handlePlayAudio = () => {
+    if (audioRef.current) {
+      if (isAudioPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(error => {
+          console.error('Audio playback failed:', error);
+          toast({
+            title: "Playback Error",
+            description: "Unable to play audio. Please try again.",
+            variant: "destructive",
+          });
+        });
       }
-    ];
-    
-    setExercises(mockExercises);
-    setProgress(0);
+      setIsAudioPlaying(!isAudioPlaying);
+    }
   };
 
   const handleSubmitAnswer = () => {
@@ -101,7 +99,7 @@ export default function Practice() {
     if (correct) {
       toast({
         title: "Correct!",
-        description: "Great job!",
+        description: "Great job on that answer! 🎉",
       });
     } else {
       toast({
@@ -118,11 +116,17 @@ export default function Practice() {
       setUserAnswer("");
       setIsAnswerCorrect(null);
       setProgress(Math.round(((currentExerciseIndex + 1) / exercises.length) * 100));
+      
+      // Stop audio if playing
+      if (isAudioPlaying && audioRef.current) {
+        audioRef.current.pause();
+        setIsAudioPlaying(false);
+      }
     } else {
       // Practice complete
       toast({
         title: "Practice Complete!",
-        description: "You've completed all exercises for this song.",
+        description: "You've completed all exercises for this song. Well done! 🌟",
       });
       
       // Reset to start again
@@ -131,6 +135,22 @@ export default function Practice() {
       setIsAnswerCorrect(null);
       setProgress(100);
     }
+  };
+
+  const handleStartRecording = () => {
+    toast({
+      title: "Recording Started",
+      description: "Practice your pronunciation! (Demo functionality)",
+    });
+    
+    // Simulate a recording and automatic checking
+    setTimeout(() => {
+      toast({
+        title: "Excellent Pronunciation!",
+        description: "Your accent is getting better! Keep practicing.",
+      });
+      setIsAnswerCorrect(true);
+    }, 3000);
   };
 
   const currentExercise = exercises[currentExerciseIndex];
@@ -170,8 +190,21 @@ export default function Practice() {
         <div>
           <h1 className="text-2xl font-bold mb-1">Practice Exercises</h1>
           <p className="text-muted-foreground">
-            Test your knowledge of "{selectedSong.title}" in {currentLanguage.name}
+            Test your knowledge of "{selectedSong.title}" in {currentLanguage.name} {currentLanguage.flag}
           </p>
+        </div>
+      </div>
+      
+      {/* Song Card */}
+      <div className="bg-spotify-darkgray border border-white/5 rounded-lg p-4 flex items-center gap-4">
+        <img 
+          src={selectedSong.albumCover} 
+          alt={selectedSong.title}
+          className="w-16 h-16 object-cover rounded"
+        />
+        <div>
+          <h3 className="font-medium">{selectedSong.title}</h3>
+          <p className="text-sm text-muted-foreground">{selectedSong.artist}</p>
         </div>
       </div>
       
@@ -209,18 +242,34 @@ export default function Practice() {
           )}
           
           {currentExercise?.type === "fill-in-blank" && (
-            <Input
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Type your answer..."
-              className="bg-spotify-lightgray border-none"
-            />
+            <div className="space-y-2">
+              <Input
+                value={userAnswer}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                placeholder="Type your answer..."
+                className="bg-spotify-lightgray border-none"
+              />
+              {currentExercise.hint && (
+                <p className="text-sm text-muted-foreground italic">Hint: {currentExercise.hint}</p>
+              )}
+            </div>
           )}
           
           {currentExercise?.type === "listening" && (
             <div className="space-y-4">
-              <Button className="w-full flex items-center gap-2">
-                <Volume2 className="h-4 w-4" /> Play Audio
+              <Button 
+                className="w-full flex items-center gap-2"
+                onClick={handlePlayAudio}
+              >
+                {isAudioPlaying ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Stop Audio
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="h-4 w-4" /> Play Audio
+                  </>
+                )}
               </Button>
               <RadioGroup value={userAnswer} onValueChange={setUserAnswer}>
                 {currentExercise.options?.map((option, index) => (
@@ -238,12 +287,20 @@ export default function Practice() {
               <p className="text-center py-2 px-4 bg-spotify-lightgray rounded font-medium">
                 "{currentExercise.correctAnswer}"
               </p>
-              <Button className="w-full flex items-center gap-2">
+              <Button 
+                className="w-full flex items-center gap-2"
+                onClick={handleStartRecording}
+              >
                 <Mic className="h-4 w-4" /> Record Your Voice
               </Button>
               <div className="text-center text-sm text-muted-foreground">
                 Click to record yourself saying the phrase
               </div>
+              {currentExercise.hint && (
+                <p className="text-sm text-muted-foreground italic text-center">
+                  Tip: {currentExercise.hint}
+                </p>
+              )}
             </div>
           )}
           
@@ -253,7 +310,7 @@ export default function Practice() {
                 {isAnswerCorrect ? (
                   <>
                     <CheckCircle className="h-5 w-5" />
-                    <span>Correct!</span>
+                    <span>Correct! Great job!</span>
                   </>
                 ) : (
                   <>

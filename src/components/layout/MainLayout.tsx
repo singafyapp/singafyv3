@@ -1,19 +1,35 @@
 
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import { MusicPlayer } from "../music/MusicPlayer";
+import { Song } from "@/types";
 
 export default function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = useState(true);
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const location = useLocation();
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
+  
+  // Check for selected song in local storage
+  useEffect(() => {
+    const savedSong = localStorage.getItem('selectedSong');
+    if (savedSong) {
+      try {
+        const song = JSON.parse(savedSong);
+        setCurrentSong(song);
+      } catch (e) {
+        console.error("Error parsing song from localStorage:", e);
+      }
+    }
+  }, [location.pathname]);
 
   return (
     <div className="flex min-h-screen bg-spotify-black">
@@ -41,7 +57,7 @@ export default function MainLayout() {
         <MobileNav />
         
         {/* Music Player - Fixed at the bottom */}
-        {showMusicPlayer && <MusicPlayer />}
+        {showMusicPlayer && <MusicPlayer songUrl={currentSong?.audioUrl} />}
       </div>
     </div>
   );

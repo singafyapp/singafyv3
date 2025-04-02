@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { 
@@ -16,33 +16,110 @@ import {
   Volume2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface MusicPlayerProps {
   className?: string;
   expanded?: boolean;
+  songUrl?: string;
 }
 
-export function MusicPlayer({ className, expanded = false }: MusicPlayerProps) {
+export function MusicPlayer({ className, expanded = false, songUrl }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(30);
+  const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(70);
   const [liked, setLiked] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(228);
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Create audio element on mount
+  useEffect(() => {
+    audioRef.current = new Audio();
+    audioRef.current.volume = volume / 100;
+    
+    // Load default audio if no songUrl provided
+    const defaultAudio = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+    audioRef.current.src = songUrl || defaultAudio;
+    
+    audioRef.current.addEventListener('loadedmetadata', () => {
+      if (audioRef.current) {
+        setDuration(audioRef.current.duration);
+      }
+    });
+    
+    audioRef.current.addEventListener('timeupdate', updateProgress);
+    audioRef.current.addEventListener('ended', handleSongEnd);
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeEventListener('timeupdate', updateProgress);
+        audioRef.current.removeEventListener('ended', handleSongEnd);
+      }
+    };
+  }, [songUrl]);
+  
+  // Update volume when changed
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+  
+  const updateProgress = () => {
+    if (audioRef.current) {
+      const current = audioRef.current.currentTime;
+      setCurrentTime(current);
+      setProgress((current / duration) * 100);
+    }
+  };
+  
+  const handleSongEnd = () => {
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+    }
+  };
 
-  const togglePlay = () => setIsPlaying(!isPlaying);
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(error => {
+          console.error('Playback failed:', error);
+          toast({
+            title: "Playback Error",
+            description: "Unable to play audio. Please try again.",
+            variant: "destructive",
+          });
+        });
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+  
+  const handleProgressChange = (values: number[]) => {
+    const newProgress = values[0];
+    setProgress(newProgress);
+    if (audioRef.current) {
+      const newTime = (newProgress / 100) * duration;
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+  
   const toggleLike = () => setLiked(!liked);
 
   const song = {
     title: "Despacito",
     artist: "Luis Fonsi ft. Daddy Yankee",
     albumCover: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&h=300",
-    duration: 228,
-    currentTime: 68,
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -122,17 +199,17 @@ export function MusicPlayer({ className, expanded = false }: MusicPlayerProps) {
           
           <div className="w-full hidden md:flex items-center gap-2">
             <span className="text-xs text-muted-foreground w-8 text-right">
-              {formatTime(song.currentTime)}
+              {formatTime(currentTime)}
             </span>
             <Slider
               value={[progress]}
               max={100}
               step={1}
               className="w-full h-1"
-              onValueChange={(values) => setProgress(values[0])}
+              onValueChange={handleProgressChange}
             />
             <span className="text-xs text-muted-foreground w-8">
-              {formatTime(song.duration)}
+              {formatTime(duration)}
             </span>
           </div>
         </div>

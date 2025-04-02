@@ -1,4 +1,3 @@
-
 import { Song, Lyric, WordFocus, PracticeExercise } from "@/types";
 
 /**
@@ -154,64 +153,200 @@ export const generateLyrics = (song: Song): Lyric[] => {
  * Generate practice exercises for a song
  */
 export const generateExercises = (song: Song): PracticeExercise[] => {
-  // In a real app, these would come from an API or database
+  // Map language name to native phrase
+  const getCommonPhrases = (code: string) => {
+    const phrases: Record<string, string[]> = {
+      "es": ["Hola, ¿cómo estás?", "Me gusta esta canción", "¿Quieres bailar conmigo?"],
+      "fr": ["Bonjour, comment ça va?", "J'aime cette chanson", "Veux-tu danser avec moi?"],
+      "de": ["Hallo, wie geht es dir?", "Ich mag dieses Lied", "Willst du mit mir tanzen?"],
+      "it": ["Ciao, come stai?", "Mi piace questa canzone", "Vuoi ballare con me?"],
+      "ko": ["안녕, 어떻게 지내?", "난 이 노래가 좋아", "나랑 춤출래?"],
+      "ja": ["こんにちは、お元気ですか？", "この曲が好きです", "私と踊りませんか？"],
+      "pt": ["Olá, como você está?", "Eu gosto desta música", "Quer dançar comigo?"],
+      "ru": ["Привет, как дела?", "Мне нравится эта песня", "Хочешь потанцевать со мной?"],
+      "zh": ["你好，你好吗？", "我喜欢这首歌", "想和我跳舞吗？"],
+      "ar": ["مرحبا كيف حالك؟", "أنا أحب هذه الأغنية", "هل تريد الرقص معي؟"],
+      "nl": ["Hallo, hoe gaat het?", "Ik hou van dit lied", "Wil je met me dansen?"],
+      "sv": ["Hej, hur mår du?", "Jag gillar den här låten", "Vill du dansa med mig?"]
+    };
+    
+    return phrases[code] || ["Hello, how are you?", "I like this song", "Would you like to dance with me?"];
+  };
+  
+  // Cultural vocabulary related to music in each language
+  const getMusicVocabulary = (code: string) => {
+    const vocab: Record<string, {word: string, translation: string}[]> = {
+      "es": [
+        { word: "ritmo", translation: "rhythm" },
+        { word: "baile", translation: "dance" },
+        { word: "cantante", translation: "singer" }
+      ],
+      "fr": [
+        { word: "rythme", translation: "rhythm" },
+        { word: "danse", translation: "dance" },
+        { word: "chanteur", translation: "singer" }
+      ],
+      "de": [
+        { word: "Rhythmus", translation: "rhythm" },
+        { word: "Tanz", translation: "dance" },
+        { word: "Sänger", translation: "singer" }
+      ],
+      "it": [
+        { word: "ritmo", translation: "rhythm" },
+        { word: "ballo", translation: "dance" },
+        { word: "cantante", translation: "singer" }
+      ],
+      "ko": [
+        { word: "리듬", translation: "rhythm" },
+        { word: "춤", translation: "dance" },
+        { word: "가수", translation: "singer" }
+      ],
+      "ja": [
+        { word: "リズム", translation: "rhythm" },
+        { word: "ダンス", translation: "dance" },
+        { word: "歌手", translation: "singer" }
+      ],
+      "pt": [
+        { word: "ritmo", translation: "rhythm" },
+        { word: "dança", translation: "dance" },
+        { word: "cantor", translation: "singer" }
+      ],
+      "ru": [
+        { word: "ритм", translation: "rhythm" },
+        { word: "танец", translation: "dance" },
+        { word: "певец", translation: "singer" }
+      ]
+    };
+    
+    return vocab[code] || [{ word: "rhythm", translation: "rhythm" }];
+  };
+
+  const phrases = getCommonPhrases(song.language.code);
+  const musicVocab = getMusicVocabulary(song.language.code);
+  
+  // Enhanced exercise set with more engaging content
   const mockExercises: PracticeExercise[] = [
     {
       id: "1",
       type: "multiple-choice",
-      question: `What language is "${song.title}" by ${song.artist} in?`,
-      options: ["English", song.language.name, "Italian", "French"].filter(lang => lang !== song.language.name).slice(0, 3).concat([song.language.name]),
-      correctAnswer: song.language.name,
+      question: `Which of these phrases means "I like listening to music" in ${song.language.name}?`,
+      options: [
+        song.language.code === "es" ? "Me gusta escuchar música" : 
+        song.language.code === "fr" ? "J'aime écouter de la musique" :
+        song.language.code === "de" ? "Ich höre gerne Musik" :
+        song.language.code === "it" ? "Mi piace ascoltare la musica" :
+        song.language.code === "ko" ? "음악 듣는 것을 좋아해요" :
+        song.language.code === "ja" ? "音楽を聴くのが好きです" :
+        song.language.code === "pt" ? "Eu gosto de ouvir música" :
+        song.language.code === "ru" ? "Я люблю слушать музыку" :
+        "I like listening to music",
+        
+        "I don't like this song",
+        "Where is the concert?",
+        "What time is it?"
+      ],
+      correctAnswer: song.language.code === "es" ? "Me gusta escuchar música" : 
+                    song.language.code === "fr" ? "J'aime écouter de la musique" :
+                    song.language.code === "de" ? "Ich höre gerne Musik" :
+                    song.language.code === "it" ? "Mi piace ascoltare la musica" :
+                    song.language.code === "ko" ? "음악 듣는 것을 좋아해요" :
+                    song.language.code === "ja" ? "音楽を聴くのが好きです" :
+                    song.language.code === "pt" ? "Eu gosto de ouvir música" :
+                    song.language.code === "ru" ? "Я люблю слушать музыку" :
+                    "I like listening to music",
       songId: song.id
     },
     {
       id: "2",
       type: "fill-in-blank",
-      question: `Complete this sentence: "${song.title}" was performed by _______.`,
-      correctAnswer: song.artist,
+      question: `Complete this popular phrase in ${song.language.name}: "${phrases[0].split(',')[0]}, ________"`,
+      correctAnswer: phrases[0].split(',')[1]?.trim() || phrases[0].split(' ')[1] || phrases[0],
+      hint: "It's a common greeting",
       songId: song.id
     },
     {
       id: "3",
       type: "multiple-choice",
-      question: `Which word would you likely hear in a ${song.language.name} song?`,
+      question: `What does "${musicVocab[0]?.word || 'rhythm'}" mean in ${song.language.name}?`,
       options: [
-        song.language.code === "es" ? "amor" : 
-        song.language.code === "fr" ? "amour" :
-        song.language.code === "de" ? "liebe" :
-        song.language.code === "it" ? "amore" :
-        song.language.code === "ko" ? "사랑" :
-        song.language.code === "ja" ? "愛" :
-        song.language.code === "pt" ? "amor" :
-        song.language.code === "ru" ? "любовь" : "love",
-        
-        "computer",
-        "weekend",
-        "internet"
+        musicVocab[0]?.translation || "rhythm",
+        "melody",
+        "lyrics",
+        "beat"
       ],
-      correctAnswer: song.language.code === "es" ? "amor" : 
-                    song.language.code === "fr" ? "amour" :
-                    song.language.code === "de" ? "liebe" :
-                    song.language.code === "it" ? "amore" :
-                    song.language.code === "ko" ? "사랑" :
-                    song.language.code === "ja" ? "愛" :
-                    song.language.code === "pt" ? "amor" :
-                    song.language.code === "ru" ? "любовь" : "love",
+      correctAnswer: musicVocab[0]?.translation || "rhythm",
       songId: song.id
     },
     {
       id: "4",
       type: "listening",
-      question: "Listen to the clip and select what you hear:",
-      options: ["Phrase 1", "Phrase 2", "Phrase 3", "Phrase 4"],
-      correctAnswer: "Phrase 2",
+      question: `Listen to this clip from "${song.title}" and identify what the artist is saying:`,
+      options: [
+        "The chorus",
+        "The first verse",
+        "A love declaration",
+        "A farewell message"
+      ],
+      correctAnswer: "The first verse",
       songId: song.id
     },
     {
       id: "5",
       type: "speaking",
-      question: "Repeat the following phrase:",
-      correctAnswer: "Sample phrase in " + song.language.name,
+      question: `Try to pronounce this phrase from the song: "${phrases[2]}"`,
+      correctAnswer: phrases[2],
+      hint: "Listen to the audio sample first and then try to mimic the pronunciation",
+      songId: song.id
+    },
+    {
+      id: "6",
+      type: "multiple-choice",
+      question: `Which of the following words would you use to describe ${song.artist}'s music style?`,
+      options: [
+        "Rhythmic",
+        "Classical",
+        "Folk",
+        "All of the above"
+      ],
+      correctAnswer: "Rhythmic",
+      songId: song.id
+    },
+    {
+      id: "7",
+      type: "fill-in-blank",
+      question: `In the ${song.language.name} music scene, the word for "dance" is __________.`,
+      correctAnswer: musicVocab[1]?.word || "dance",
+      hint: "It's a common activity associated with music",
+      songId: song.id
+    },
+    {
+      id: "8",
+      type: "multiple-choice",
+      question: `Which of these expressions would you use to say "This song is amazing!" in ${song.language.name}?`,
+      options: [
+        song.language.code === "es" ? "¡Esta canción es increíble!" : 
+        song.language.code === "fr" ? "Cette chanson est incroyable !" :
+        song.language.code === "de" ? "Dieses Lied ist unglaublich!" :
+        song.language.code === "it" ? "Questa canzone è incredibile!" :
+        song.language.code === "ko" ? "이 노래는 놀라워요!" :
+        song.language.code === "ja" ? "この曲は素晴らしいです！" :
+        song.language.code === "pt" ? "Esta música é incrível!" :
+        song.language.code === "ru" ? "Эта песня потрясающая!" :
+        "This song is amazing!",
+        
+        "The music is too loud",
+        "I don't understand the lyrics",
+        "When does the concert start?"
+      ],
+      correctAnswer: song.language.code === "es" ? "¡Esta canción es increíble!" : 
+                    song.language.code === "fr" ? "Cette chanson est incroyable !" :
+                    song.language.code === "de" ? "Dieses Lied ist unglaublich!" :
+                    song.language.code === "it" ? "Questa canzone è incredibile!" :
+                    song.language.code === "ko" ? "이 노래는 놀라워요!" :
+                    song.language.code === "ja" ? "この曲は素晴らしいです！" :
+                    song.language.code === "pt" ? "Esta música é incrível!" :
+                    song.language.code === "ru" ? "Эта песня потрясающая!" :
+                    "This song is amazing!",
       songId: song.id
     }
   ];
