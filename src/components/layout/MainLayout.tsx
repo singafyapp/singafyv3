@@ -25,6 +25,14 @@ export default function MainLayout() {
     if (savedSong) {
       try {
         const song = JSON.parse(savedSong);
+        
+        // Ensure song has a valid audio URL
+        if (!song.audioUrl || song.audioUrl.trim() === '') {
+          const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+          console.log("Setting fallback audio URL:", fallbackUrl);
+          song.audioUrl = fallbackUrl;
+        }
+        
         setCurrentSong(song);
         console.log("Selected song loaded from localStorage:", song.title);
         console.log("Audio source:", song.audioUrl);
@@ -60,7 +68,9 @@ export default function MainLayout() {
         <MobileNav />
         
         {/* Music Player - Fixed at the bottom */}
-        {showMusicPlayer && <MusicPlayer songUrl={currentSong?.audioUrl || ''} />}
+        {showMusicPlayer && currentSong?.audioUrl && 
+          <MusicPlayer songUrl={currentSong.audioUrl} />
+        }
       </div>
     </div>
   );

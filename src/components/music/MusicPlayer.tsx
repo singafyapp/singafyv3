@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -47,21 +48,20 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
   // Update audio source when songUrl changes
   useEffect(() => {
     if (audioRef.current && songUrl) {
+      // Check if URL is empty or undefined
+      if (songUrl.trim() === '') {
+        console.error("Empty song URL provided to MusicPlayer");
+        return;
+      }
+      
+      console.log("Music player setting audio source:", songUrl);
       audioRef.current.src = songUrl;
       audioRef.current.load();
       setCurrentTime(0);
       setDuration(0);
       
-      // Auto-play when a new song is loaded
-      audioRef.current.play()
-        .then(() => {
-          setIsPlaying(true);
-          console.log("Music player started playback");
-        })
-        .catch(error => {
-          console.error("Playback failed:", error);
-          setIsPlaying(false);
-        });
+      // Don't auto-play when a new song is loaded - let user decide
+      setIsPlaying(false);
     }
   }, [songUrl]);
   
@@ -81,6 +81,7 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
   const handleLoadMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
+      console.log("Audio metadata loaded. Duration:", audioRef.current.duration);
     }
   };
   
@@ -91,14 +92,41 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
   };
   
   const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play()
-          .catch(error => console.error("Playback failed:", error));
+    if (!audioRef.current || !songUrl) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      // Ensure we have the latest source
+      if (songUrl !== audioRef.current.src) {
+        audioRef.current.src = songUrl;
+        audioRef.current.load();
       }
-      setIsPlaying(!isPlaying);
+      
+      audioRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+          console.log("Music player started playback successfully");
+        })
+        .catch(error => {
+          console.error("Playback failed:", error);
+          
+          // Try with a fallback URL if original fails
+          const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+          console.log("Trying with fallback URL:", fallbackUrl);
+          
+          audioRef.current!.src = fallbackUrl;
+          audioRef.current!.load();
+          audioRef.current!.play()
+            .then(() => {
+              setIsPlaying(true);
+              console.log("Fallback playback started");
+            })
+            .catch(secondError => {
+              console.error("Fallback playback also failed:", secondError);
+            });
+        });
     }
   };
   

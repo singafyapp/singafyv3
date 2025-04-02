@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,29 +19,33 @@ interface LyricLearningCardProps {
   lyrics?: Lyric[];
 }
 
-export function LyricLearningCard({ song, lyrics }: LyricLearningCardProps) {
+export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   useEffect(() => {
     // Create audio element
-    audioRef.current = new Audio();
-    
-    // Use the song's audio URL or a fallback
-    if (song.audioUrl) {
-      audioRef.current.src = song.audioUrl;
-      console.log("Learning card audio source:", song.audioUrl);
-    } else {
-      // Fallback preview URL that is known to work
-      audioRef.current.src = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-      console.log("Using fallback audio source");
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
     }
     
+    // Use the song's audio URL or a fallback
+    if (song.audioUrl && song.audioUrl.trim() !== '') {
+      audioRef.current.src = song.audioUrl;
+      console.log("Learning card audio source set to:", song.audioUrl);
+    } else {
+      // Fallback preview URL that is known to work
+      const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+      audioRef.current.src = fallbackUrl;
+      console.log("Using fallback audio source:", fallbackUrl);
+    }
+    
+    // Stop playback when component is unmounted
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current = null;
+        setIsPlaying(false);
       }
     };
   }, [song]);
@@ -53,18 +56,37 @@ export function LyricLearningCard({ song, lyrics }: LyricLearningCardProps) {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
+        // Make sure we have the latest source
+        if (song.audioUrl && song.audioUrl !== audioRef.current.src) {
+          audioRef.current.src = song.audioUrl;
+        }
+        
         audioRef.current.play()
           .then(() => {
             setIsPlaying(true);
-            console.log("Learning card audio playback started");
+            console.log("Learning card audio playback started successfully");
           })
           .catch(error => {
             console.error('Playback failed:', error);
-            toast({
-              title: "Audio Playback Error",
-              description: "Unable to play this song. Please try another song.",
-              variant: "destructive",
-            });
+            
+            // Try with fallback URL if original fails
+            const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+            console.log("Trying fallback audio URL:", fallbackUrl);
+            
+            audioRef.current!.src = fallbackUrl;
+            audioRef.current!.play()
+              .then(() => {
+                setIsPlaying(true);
+                console.log("Fallback audio playback started");
+              })
+              .catch(secondError => {
+                console.error('Fallback playback also failed:', secondError);
+                toast({
+                  title: "Audio Playback Error",
+                  description: "Unable to play this song. Please try another song.",
+                  variant: "destructive",
+                });
+              });
           });
       }
     }
@@ -173,7 +195,7 @@ export function LyricLearningCard({ song, lyrics }: LyricLearningCardProps) {
           
           <div className="flex-1 flex items-center justify-center">
             <LyricDisplay 
-              lyrics={lyrics || []} 
+              lyrics={lyrics} 
               currentIndex={currentLyricIndex} 
             />
           </div>

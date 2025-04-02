@@ -1,9 +1,276 @@
+
 import { Song, Lyric, WordFocus, PracticeExercise } from "@/types";
 
 /**
  * Generate sample lyrics based on the song and its language
  */
 export const generateLyrics = (song: Song): Lyric[] => {
+  console.log(`Generating lyrics for "${song.title}" in ${song.language.name}`);
+  
+  // Define base lyrics for different songs
+  const songSpecificLyrics: { [key: string]: Lyric[] } = {
+    // Despacito lyrics
+    "Despacito": [
+      {
+        id: "1",
+        songId: song.id,
+        startTime: 15,
+        endTime: 18,
+        text: "Sí, sabes que ya llevo un rato mirándote",
+        translation: "Yes, you know I've been looking at you for a while",
+        wordFocus: [
+          {
+            id: "1",
+            word: "sabes",
+            translation: "you know",
+            definition: "To have information in your mind",
+            examples: ["¿Sabes la respuesta?", "Sabes que te quiero."]
+          },
+          {
+            id: "2",
+            word: "mirándote",
+            translation: "looking at you",
+            definition: "To direct your eyes in order to see",
+            examples: ["Estoy mirándote.", "Él está mirándote desde lejos."]
+          }
+        ]
+      },
+      {
+        id: "2",
+        songId: song.id,
+        startTime: 19,
+        endTime: 22,
+        text: "Tengo que bailar contigo hoy",
+        translation: "I have to dance with you today",
+        wordFocus: [
+          {
+            id: "3",
+            word: "Tengo",
+            translation: "I have to",
+            definition: "To be obliged to do something",
+            examples: ["Tengo un coche.", "Tengo que ir."]
+          },
+          {
+            id: "4",
+            word: "bailar",
+            translation: "to dance",
+            definition: "To move rhythmically to music",
+            examples: ["Me gusta bailar.", "¿Quieres bailar conmigo?"]
+          }
+        ]
+      },
+      {
+        id: "3",
+        songId: song.id,
+        startTime: 23,
+        endTime: 26,
+        text: "Vi que tu mirada ya estaba llamándome",
+        translation: "I saw that your look was already calling me",
+        wordFocus: [
+          {
+            id: "6",
+            word: "mirada",
+            translation: "look/gaze",
+            definition: "A particular expression in someone's eyes",
+            examples: ["Su mirada era intensa.", "Una mirada puede decir mucho."]
+          },
+          {
+            id: "7",
+            word: "llamándome",
+            translation: "calling me",
+            definition: "To cry out to someone",
+            examples: ["Está llamándome por teléfono.", "Siento que estás llamándome."]
+          }
+        ]
+      },
+      {
+        id: "4",
+        songId: song.id,
+        startTime: 27,
+        endTime: 30,
+        text: "Muéstrame el camino que yo voy",
+        translation: "Show me the way I'm going",
+        wordFocus: [
+          {
+            id: "8",
+            word: "Muéstrame",
+            translation: "Show me",
+            definition: "To display or point out something to someone",
+            examples: ["Muéstrame tu casa.", "¿Puedes mostrarme el camino?"]
+          },
+          {
+            id: "9",
+            word: "camino",
+            translation: "way/path",
+            definition: "A track or road that leads somewhere",
+            examples: ["Este es el camino correcto.", "Vamos por este camino."]
+          }
+        ]
+      }
+    ],
+    
+    // La Vie En Rose lyrics
+    "La Vie En Rose": [
+      {
+        id: "1",
+        songId: song.id,
+        startTime: 12,
+        endTime: 15,
+        text: "Des yeux qui font baisser les miens",
+        translation: "Eyes that make mine look down",
+        wordFocus: [
+          {
+            id: "1",
+            word: "yeux",
+            translation: "eyes",
+            definition: "The organs of sight",
+            examples: ["Ses yeux sont bleus.", "Ferme tes yeux."]
+          },
+          {
+            id: "2",
+            word: "baisser",
+            translation: "to lower/look down",
+            definition: "To move something to a lower position",
+            examples: ["Baissez le volume.", "Il a baissé la tête."]
+          }
+        ]
+      },
+      {
+        id: "2",
+        songId: song.id,
+        startTime: 16,
+        endTime: 19,
+        text: "Un rire qui se perd sur sa bouche",
+        translation: "A laugh that gets lost on his lips",
+        wordFocus: [
+          {
+            id: "3",
+            word: "rire",
+            translation: "laugh",
+            definition: "The action or sound of laughing",
+            examples: ["Son rire est contagieux.", "J'aime ton rire."]
+          },
+          {
+            id: "4",
+            word: "bouche",
+            translation: "mouth/lips",
+            definition: "The opening in the face through which food is taken",
+            examples: ["Ouvre la bouche.", "Elle a mis du rouge à lèvres sur sa bouche."]
+          }
+        ]
+      },
+      {
+        id: "3",
+        songId: song.id,
+        startTime: 20,
+        endTime: 23,
+        text: "Voilà le portrait sans retouche",
+        translation: "This is the unretouched portrait",
+        wordFocus: [
+          {
+            id: "5",
+            word: "portrait",
+            translation: "portrait",
+            definition: "A painting, drawing, or photograph of a person",
+            examples: ["C'est un beau portrait.", "L'artiste a peint son portrait."]
+          },
+          {
+            id: "6",
+            word: "retouche",
+            translation: "retouching/editing",
+            definition: "A small change made to improve something",
+            examples: ["Cette photo a besoin de retouches.", "Sans retouche, c'est plus naturel."]
+          }
+        ]
+      }
+    ],
+    
+    // 99 Luftballons lyrics
+    "99 Luftballons": [
+      {
+        id: "1",
+        songId: song.id,
+        startTime: 10,
+        endTime: 14,
+        text: "Hast du etwas Zeit für mich",
+        translation: "Do you have some time for me",
+        wordFocus: [
+          {
+            id: "1",
+            word: "Zeit",
+            translation: "time",
+            definition: "The indefinite continued progress of existence",
+            examples: ["Ich habe keine Zeit.", "Zeit ist Geld."]
+          },
+          {
+            id: "2",
+            word: "für mich",
+            translation: "for me",
+            definition: "Indicating the recipient of an action",
+            examples: ["Das ist für mich.", "Machst du das für mich?"]
+          }
+        ]
+      },
+      {
+        id: "2",
+        songId: song.id,
+        startTime: 15,
+        endTime: 18,
+        text: "Dann singe ich ein Lied für dich",
+        translation: "Then I'll sing a song for you",
+        wordFocus: [
+          {
+            id: "3",
+            word: "singe",
+            translation: "sing",
+            definition: "To make musical sounds with the voice",
+            examples: ["Ich singe gerne.", "Sie singt in einem Chor."]
+          },
+          {
+            id: "4",
+            word: "Lied",
+            translation: "song",
+            definition: "A short poem or musical piece",
+            examples: ["Das ist mein Lieblingslied.", "Er schreibt ein neues Lied."]
+          }
+        ]
+      },
+      {
+        id: "3",
+        songId: song.id,
+        startTime: 19,
+        endTime: 23,
+        text: "Von neunundneunzig Luftballons",
+        translation: "About ninety-nine balloons",
+        wordFocus: [
+          {
+            id: "5",
+            word: "neunundneunzig",
+            translation: "ninety-nine",
+            definition: "The number 99",
+            examples: ["Ich habe neunundneunzig Probleme.", "Neunundneunzig ist fast hundert."]
+          },
+          {
+            id: "6",
+            word: "Luftballons",
+            translation: "balloons",
+            definition: "Inflated rubber sacs used as toys or decorations",
+            examples: ["Die Kinder spielen mit Luftballons.", "Wir brauchen mehr Luftballons für die Party."]
+          }
+        ]
+      }
+    ]
+  };
+  
+  // Try to find song-specific lyrics
+  for (const songName in songSpecificLyrics) {
+    if (song.title.includes(songName)) {
+      console.log(`Found specific lyrics for "${songName}"`);
+      return songSpecificLyrics[songName];
+    }
+  }
+  
+  // If no specific lyrics found, generate generic lyrics based on language
   // In a real app, these would come from an API or database
   const sampleLyrics: Lyric[] = [
     {
@@ -153,6 +420,224 @@ export const generateLyrics = (song: Song): Lyric[] => {
  * Generate practice exercises for a song
  */
 export const generateExercises = (song: Song): PracticeExercise[] => {
+  console.log(`Generating exercises for "${song.title}" in ${song.language.name}`);
+  
+  // Define song-specific exercises
+  const songSpecificExercises: { [key: string]: PracticeExercise[] } = {
+    // Despacito exercises
+    "Despacito": [
+      {
+        id: "1",
+        type: "multiple-choice",
+        question: "In the song Despacito, what does the phrase 'Despacito' mean?",
+        options: ["Slowly", "Quickly", "Loudly", "Softly"],
+        correctAnswer: "Slowly",
+        songId: song.id
+      },
+      {
+        id: "2",
+        type: "fill-in-blank",
+        question: "Complete this lyric from Despacito: 'Quiero respirar tu cuello _________'",
+        correctAnswer: "despacito",
+        hint: "It's the title of the song",
+        songId: song.id
+      },
+      {
+        id: "3",
+        type: "multiple-choice",
+        question: "Which phrase appears in the chorus of Despacito?",
+        options: [
+          "Pasito a pasito, suave suavecito",
+          "Vamos a bailar esta noche",
+          "Yo te quiero ver",
+          "Mira mi corazón"
+        ],
+        correctAnswer: "Pasito a pasito, suave suavecito",
+        songId: song.id
+      },
+      {
+        id: "4",
+        type: "listening",
+        question: "Listen to this clip from the song and identify what Luis Fonsi is saying:",
+        options: [
+          "The chorus",
+          "The first verse",
+          "A love declaration",
+          "The bridge section"
+        ],
+        correctAnswer: "The first verse",
+        songId: song.id
+      },
+      {
+        id: "5",
+        type: "speaking",
+        question: "Try to pronounce this phrase from Despacito: 'Quiero ver bailar tu pelo'",
+        correctAnswer: "Quiero ver bailar tu pelo",
+        hint: "Focus on the 'r' sound in 'Quiero' and the 'l' sound in 'bailar' and 'pelo'",
+        songId: song.id
+      },
+      {
+        id: "6",
+        type: "multiple-choice",
+        question: "What common Spanish verb conjugation is demonstrated in 'Quiero ver bailar tu pelo'?",
+        options: [
+          "Present tense first person singular (yo)",
+          "Past tense third person (él/ella)",
+          "Imperative form",
+          "Future tense"
+        ],
+        correctAnswer: "Present tense first person singular (yo)",
+        songId: song.id
+      },
+      {
+        id: "7",
+        type: "fill-in-blank",
+        question: "In Spanish, the word for 'slowly' is __________.",
+        correctAnswer: "despacito",
+        hint: "It's the title of this famous song",
+        songId: song.id
+      },
+      {
+        id: "8",
+        type: "multiple-choice",
+        question: "Which of these expressions would you use to say 'I want to dance with you' in Spanish?",
+        options: [
+          "Quiero bailar contigo",
+          "Me gusta la música",
+          "¿Dónde está la fiesta?",
+          "Tengo que irme"
+        ],
+        correctAnswer: "Quiero bailar contigo",
+        songId: song.id
+      }
+    ],
+    
+    // La Vie En Rose exercises
+    "La Vie En Rose": [
+      {
+        id: "1",
+        type: "multiple-choice",
+        question: "What does 'La Vie En Rose' translate to in English?",
+        options: ["Life in Pink", "The Pink Rose", "Rosy Life", "Pink View"],
+        correctAnswer: "Life in Pink",
+        songId: song.id
+      },
+      {
+        id: "2",
+        type: "fill-in-blank",
+        question: "Complete this lyric from La Vie En Rose: 'Des yeux qui font baisser les ______'",
+        correctAnswer: "miens",
+        hint: "It refers to 'mine' (my eyes)",
+        songId: song.id
+      },
+      {
+        id: "3",
+        type: "multiple-choice",
+        question: "In French, what does 'yeux' mean?",
+        options: ["Eyes", "Yours", "Heart", "Soul"],
+        correctAnswer: "Eyes",
+        songId: song.id
+      },
+      {
+        id: "4",
+        type: "listening",
+        question: "Listen to this clip from La Vie En Rose and identify what Edith Piaf is singing about:",
+        options: [
+          "Her lover's eyes",
+          "A beautiful garden",
+          "The city of Paris",
+          "Her childhood"
+        ],
+        correctAnswer: "Her lover's eyes",
+        songId: song.id
+      },
+      {
+        id: "5",
+        type: "speaking",
+        question: "Try to pronounce this phrase from La Vie En Rose: 'Quand il me prend dans ses bras'",
+        correctAnswer: "Quand il me prend dans ses bras",
+        hint: "Focus on the nasal sounds in 'Quand' and 'dans'",
+        songId: song.id
+      },
+      {
+        id: "6",
+        type: "multiple-choice",
+        question: "Which French expression from La Vie En Rose means 'he speaks words of love to me'?",
+        options: [
+          "Il me dit des mots d'amour",
+          "Il me parle tout bas",
+          "Des nuits d'amour à plus finir",
+          "Mon cœur qui bat"
+        ],
+        correctAnswer: "Il me dit des mots d'amour",
+        songId: song.id
+      }
+    ],
+    
+    // 99 Luftballons exercises
+    "99 Luftballons": [
+      {
+        id: "1",
+        type: "multiple-choice",
+        question: "What is the meaning of 'Luftballons' in English?",
+        options: ["Balloons", "Airplanes", "Clouds", "Satellites"],
+        correctAnswer: "Balloons",
+        songId: song.id
+      },
+      {
+        id: "2",
+        type: "fill-in-blank",
+        question: "Complete this lyric from 99 Luftballons: 'Hast du etwas _____ für mich'",
+        correctAnswer: "Zeit",
+        hint: "It means 'time' in English",
+        songId: song.id
+      },
+      {
+        id: "3",
+        type: "multiple-choice",
+        question: "What theme does the song 99 Luftballons primarily address?",
+        options: [
+          "Cold War tensions and nuclear war fears",
+          "Childhood memories and nostalgia",
+          "Romantic relationships",
+          "Environmental pollution"
+        ],
+        correctAnswer: "Cold War tensions and nuclear war fears",
+        songId: song.id
+      },
+      {
+        id: "4",
+        type: "listening",
+        question: "Listen to this clip from 99 Luftballons and identify what Nena is singing about:",
+        options: [
+          "Releasing balloons into the sky",
+          "Military misunderstanding the balloons",
+          "A birthday celebration",
+          "Flying in an airplane"
+        ],
+        correctAnswer: "Releasing balloons into the sky",
+        songId: song.id
+      },
+      {
+        id: "5",
+        type: "speaking",
+        question: "Try to pronounce this phrase from 99 Luftballons: 'Neunundneunzig Luftballons'",
+        correctAnswer: "Neunundneunzig Luftballons",
+        hint: "Focus on the 'eu' sound in 'Neun' and the 'ons' sound at the end",
+        songId: song.id
+      }
+    ]
+  };
+  
+  // Check if we have specific exercises for this song
+  for (const songName in songSpecificExercises) {
+    if (song.title.includes(songName)) {
+      console.log(`Found specific exercises for "${songName}"`);
+      return songSpecificExercises[songName];
+    }
+  }
+  
+  // If no specific exercises are found, generate generic ones based on the song's language
   // Map language name to native phrase
   const getCommonPhrases = (code: string) => {
     const phrases: Record<string, string[]> = {
@@ -221,8 +706,11 @@ export const generateExercises = (song: Song): PracticeExercise[] => {
     return vocab[code] || [{ word: "rhythm", translation: "rhythm" }];
   };
 
+  // Generate language-specific exercises based on the song
   const phrases = getCommonPhrases(song.language.code);
   const musicVocab = getMusicVocabulary(song.language.code);
+  
+  console.log(`Generating generic exercises for ${song.language.name} language`);
   
   // Enhanced exercise set with more engaging content
   const mockExercises: PracticeExercise[] = [

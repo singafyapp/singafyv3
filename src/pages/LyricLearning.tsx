@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { LyricLearningCard } from "@/components/learning/LyricLearningCard";
 import { RecommendedSongCard } from "@/components/dashboard/RecommendedSongCard";
@@ -17,12 +18,39 @@ export default function LyricLearning() {
     // Load selected song from local storage
     const savedSong = localStorage.getItem('selectedSong');
     if (savedSong) {
-      const song: Song = JSON.parse(savedSong);
-      setCurrentSong(song);
-      
-      // Generate lyrics for this song
-      const songLyrics = generateLyrics(song);
-      setLyrics(songLyrics);
+      try {
+        const song: Song = JSON.parse(savedSong);
+        
+        // Ensure song has a valid audio URL
+        if (!song.audioUrl || song.audioUrl.trim() === '') {
+          song.audioUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+          console.log("Setting fallback audio URL for current song:", song.audioUrl);
+        }
+        
+        setCurrentSong(song);
+        
+        // Generate lyrics for this song - store in variable first to prevent TS error
+        const songLyrics = generateLyrics(song);
+        setLyrics(songLyrics);
+        console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
+      } else {
+        // If no song is selected, use a default one for demo
+        const defaultSong: Song = {
+          id: "1",
+          title: "Despacito",
+          artist: "Luis Fonsi ft. Daddy Yankee",
+          albumCover: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&h=300",
+          duration: 228,
+          difficulty: "beginner",
+          language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
+          audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+        };
+        setCurrentSong(defaultSong);
+        
+        // Generate lyrics for default song
+        const defaultLyrics = generateLyrics(defaultSong);
+        setLyrics(defaultLyrics);
+      }
     } else {
       // If no song is selected, use a default one for demo
       const defaultSong: Song = {
@@ -36,6 +64,8 @@ export default function LyricLearning() {
         audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
       };
       setCurrentSong(defaultSong);
+      
+      // Generate lyrics for default song
       const defaultLyrics = generateLyrics(defaultSong);
       setLyrics(defaultLyrics);
     }
@@ -45,7 +75,7 @@ export default function LyricLearning() {
     if (favorites.length > 0) {
       // Ensure all favorite songs have audio URLs
       const favoritesWithAudio = favorites.slice(0, 4).map(song => {
-        if (!song.audioUrl) {
+        if (!song.audioUrl || song.audioUrl.trim() === '') {
           return {
             ...song,
             audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
@@ -94,18 +124,23 @@ export default function LyricLearning() {
 
   const handleSelectSong = (song: Song) => {
     // Ensure the song has an audio URL for demo purposes
-    if (!song.audioUrl) {
+    if (!song.audioUrl || song.audioUrl.trim() === '') {
       const sampleUrls = [
         "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
         "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
         "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
       ];
       song.audioUrl = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
+      console.log("Added audio URL to song:", song.title, song.audioUrl);
     }
     
     setCurrentSong(song);
+    
+    // Generate lyrics for this song - store in variable first to prevent TS error
     const songLyrics = generateLyrics(song);
     setLyrics(songLyrics);
+    console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
+    
     localStorage.setItem('selectedSong', JSON.stringify(song));
     
     toast({

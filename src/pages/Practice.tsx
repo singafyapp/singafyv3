@@ -32,16 +32,6 @@ export default function Practice() {
     // Create audio element
     audioRef.current = new Audio();
     
-    // Set up audio demo clips
-    const demoClips = [
-      "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
-      "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
-      "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
-    ];
-    
-    // Use a random clip for demo
-    audioRef.current.src = demoClips[Math.floor(Math.random() * demoClips.length)];
-    
     // Load selected song from local storage
     const savedSong = localStorage.getItem('selectedSong');
     if (savedSong) {
@@ -49,21 +39,27 @@ export default function Practice() {
         const song: Song = JSON.parse(savedSong);
         
         // Add audio URL if missing (for testing purposes)
-        if (!song.audioUrl) {
+        if (!song.audioUrl || song.audioUrl.trim() === '') {
+          const demoClips = [
+            "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
+            "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
+            "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
+          ];
           song.audioUrl = demoClips[Math.floor(Math.random() * demoClips.length)];
+          console.log("Added audio URL to loaded song:", song.audioUrl);
         }
         
         setSelectedSong(song);
         setCurrentLanguage(song.language);
         
         if (audioRef.current) {
-          audioRef.current.src = song.audioUrl || demoClips[0];
+          audioRef.current.src = song.audioUrl;
         }
         
-        // Generate practice exercises for this song
+        // Generate practice exercises for this specific song
         const songExercises = generateExercises(song);
         setExercises(songExercises);
-        console.log(`Generated ${songExercises.length} exercises for ${song.title}`);
+        console.log(`Generated ${songExercises.length} exercises for "${song.title}" in ${song.language.name}`);
       } catch (e) {
         console.error("Error parsing song from localStorage:", e);
       }
@@ -79,23 +75,44 @@ export default function Practice() {
   }, []);
 
   const handlePlayAudio = () => {
-    if (audioRef.current) {
-      if (isAudioPlaying) {
-        audioRef.current.pause();
-        setIsAudioPlaying(false);
-      } else {
-        audioRef.current.play().then(() => {
-          setIsAudioPlaying(true);
-          console.log("Practice audio playing successfully");
-        }).catch(error => {
-          console.error('Audio playback failed:', error);
-          toast({
-            title: "Playback Error",
-            description: "Unable to play audio. Please try again.",
-            variant: "destructive",
-          });
-        });
+    if (!audioRef.current || !selectedSong?.audioUrl) return;
+    
+    if (isAudioPlaying) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    } else {
+      // Make sure the audio source is set correctly
+      if (selectedSong.audioUrl !== audioRef.current.src) {
+        audioRef.current.src = selectedSong.audioUrl;
+        audioRef.current.load();
       }
+      
+      audioRef.current.play().then(() => {
+        setIsAudioPlaying(true);
+        console.log("Practice audio playing successfully");
+      }).catch(error => {
+        console.error('Audio playback failed:', error);
+        
+        // Try with fallback URL
+        const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+        console.log("Trying fallback URL for practice:", fallbackUrl);
+        
+        audioRef.current!.src = fallbackUrl;
+        audioRef.current!.load();
+        audioRef.current!.play()
+          .then(() => {
+            setIsAudioPlaying(true);
+            console.log("Fallback audio playing successfully");
+          })
+          .catch(secondError => {
+            console.error('Fallback audio also failed:', secondError);
+            toast({
+              title: "Playback Error",
+              description: "Unable to play audio. Please try another song.",
+              variant: "destructive",
+            });
+          });
+      });
     }
   };
 
