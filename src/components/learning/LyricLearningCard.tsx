@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,11 +25,61 @@ export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps)
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
+  // Use a state to track if audio is ready
+  const [isAudioReady, setIsAudioReady] = useState(false);
+  
   useEffect(() => {
     // Create audio element
     if (!audioRef.current) {
       audioRef.current = new Audio();
+      
+      // Set up event handlers for the audio element
+      audioRef.current.addEventListener('canplaythrough', () => {
+        console.log('Audio ready to play');
+        setIsAudioReady(true);
+      });
+      
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        setIsPlaying(false);
+        toast({
+          title: "Audio Error",
+          description: "Could not load audio. Trying alternative source...",
+          variant: "destructive",
+        });
+        
+        // Try with a reliable fallback URL
+        if (audioRef.current) {
+          audioRef.current.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+          audioRef.current.load();
+        }
+      });
+      
+      audioRef.current.addEventListener('ended', () => {
+        setIsPlaying(false);
+        console.log('Audio playback ended');
+      });
     }
+    
+    // Clean up function
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+        
+        // Remove event listeners
+        audioRef.current.removeEventListener('canplaythrough', () => {});
+        audioRef.current.removeEventListener('error', () => {});
+        audioRef.current.removeEventListener('ended', () => {});
+      }
+    };
+  }, []);
+  
+  // Set the audio source when the song changes
+  useEffect(() => {
+    if (!audioRef.current) return;
+    
+    setIsAudioReady(false);
     
     // Use the song's audio URL or a fallback
     if (song.audioUrl && song.audioUrl.trim() !== '') {
@@ -36,54 +87,49 @@ export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps)
       console.log("Learning card audio source set to:", song.audioUrl);
     } else {
       // Fallback preview URL that is known to work
-      const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-      audioRef.current.src = fallbackUrl;
-      console.log("Using fallback audio source:", fallbackUrl);
+      audioRef.current.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+      console.log("Using fallback audio source");
     }
     
-    // Stop playback when component is unmounted
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    };
+    // Load the audio to check if it works
+    audioRef.current.load();
+    
   }, [song]);
   
   const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        // Make sure we have the latest source
-        if (song.audioUrl && song.audioUrl !== audioRef.current.src) {
-          audioRef.current.src = song.audioUrl;
-        }
-        
-        audioRef.current.play()
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      // Use a more reliable song sample if we're having issues
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
           .then(() => {
             setIsPlaying(true);
-            console.log("Learning card audio playback started successfully");
+            console.log("Audio playing successfully");
           })
           .catch(error => {
-            console.error('Playback failed:', error);
+            console.error('Audio playback error:', error);
             
-            // Try with fallback URL if original fails
-            const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-            console.log("Trying fallback audio URL:", fallbackUrl);
+            // Try a highly reliable audio source
+            audioRef.current!.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+            audioRef.current!.load();
             
-            audioRef.current!.src = fallbackUrl;
+            // Try playing again
             audioRef.current!.play()
               .then(() => {
                 setIsPlaying(true);
-                console.log("Fallback audio playback started");
+                console.log("Fallback audio playing successfully");
               })
               .catch(secondError => {
-                console.error('Fallback playback also failed:', secondError);
+                console.error('Fallback also failed:', secondError);
                 toast({
-                  title: "Audio Playback Error",
-                  description: "Unable to play this song. Please try another song.",
+                  title: "Audio Playback Failed",
+                  description: "Unable to play audio. Please try another song.",
                   variant: "destructive",
                 });
               });
@@ -150,6 +196,7 @@ export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps)
           <Button 
             onClick={togglePlay}
             className="w-full flex items-center gap-2 mb-6 bg-primary hover:bg-primary/90"
+            disabled={!isAudioReady && !isPlaying}
           >
             {isPlaying ? (
               <>

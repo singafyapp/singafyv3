@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -7,7 +6,6 @@ import {
   Heart,
   LayoutGrid,
   LogOut,
-  Mic2,
   Music,
   Music2,
   Settings,
@@ -33,7 +31,6 @@ const MainNavItems: NavItem[] = [
   { icon: Music, label: "Browse Songs", href: "/songs" },
   { icon: Heart, label: "Favorites", href: "/favorites" },
   { icon: BookOpen, label: "Lyric Learning", href: "/lyric-learning" },
-  { icon: Mic2, label: "Practice", href: "/practice" },
   { icon: BarChart3, label: "Progress", href: "/progress" },
 ];
 
