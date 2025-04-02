@@ -42,7 +42,7 @@ export function RecommendedSongCard({
   
   return (
     <div className={cn(
-      "glass-card rounded-md overflow-hidden hover-scale",
+      "glass-card rounded-md overflow-hidden transition-transform duration-200 hover:scale-102",
       isHorizontal ? "flex flex-row" : "flex flex-col"
     )}>
       <div className={cn(

@@ -26,6 +26,10 @@ export const saveFavorite = (song: Song): void => {
     
     if (existingIndex !== -1) {
       // Already exists - don't add duplicate
+      toast({
+        title: "Already in favorites",
+        description: "This song is already in your favorites",
+      });
       return;
     }
     
@@ -34,6 +38,11 @@ export const saveFavorite = (song: Song): void => {
     
     // Save back to local storage
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    
+    toast({
+      title: "Added to favorites",
+      description: `${song.title} has been added to your favorites`,
+    });
   } catch (error) {
     console.error("Error saving favorite:", error);
     toast({

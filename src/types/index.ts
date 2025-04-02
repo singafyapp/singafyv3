@@ -84,6 +84,17 @@ export interface LanguageOption {
   flag: string;
 }
 
+export interface PracticeExercise {
+  id: string;
+  type: "fill-in-blank" | "multiple-choice" | "listening" | "speaking";
+  question: string;
+  options?: string[];
+  correctAnswer: string;
+  hint?: string;
+  songId: string;
+  lyricId?: string;
+}
+
 // Define all available languages in the app
 export const availableLanguages: LanguageOption[] = [
   { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },

@@ -9,7 +9,7 @@ import spotifyService from "@/services/spotify";
 import { useSpotify } from "@/hooks/useSpotify";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { saveFavorite, getFavorites } from "@/services/favorites";
+import { saveFavorite, isFavorite } from "@/services/favorites";
 
 interface SpotifyTrack {
   id: string;
@@ -198,20 +198,8 @@ export default function Songs() {
     }
   };
 
-  const handleAddToFavorites = async (song: Song) => {
-    try {
-      await saveFavorite(song);
-      toast({
-        title: "Added to favorites",
-        description: `${song.title} has been added to your favorites`,
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to add to favorites",
-        description: "Please try again later",
-        variant: "destructive"
-      });
-    }
+  const handleAddToFavorites = (song: Song) => {
+    saveFavorite(song);
   };
 
   const handleSongSelect = (song: Song, mode: 'learn' | 'practice') => {

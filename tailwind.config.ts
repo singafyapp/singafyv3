@@ -1,13 +1,11 @@
-
-import type { Config } from "tailwindcss";
-
-export default {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
   ],
   prefix: "",
   theme: {
@@ -19,6 +17,9 @@ export default {
       },
     },
     extend: {
+      scale: {
+        '102': '1.02',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -53,13 +54,10 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Singafy specific colors
-        spotify: {
-          green: "#1DB954",
-          black: "#121212",
-          darkgray: "#181818",
-          lightgray: "#282828",
-        },
+        // Spotify-specific colors
+        "spotify-black": "#121212",
+        "spotify-darkgray": "#181818",
+        "spotify-lightgray": "#282828",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -75,20 +73,23 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "pulse-light": {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
+        "pulse-glow": {
+          "0%, 100%": { 
+            opacity: "1",
+            filter: "brightness(1)" 
+          },
+          "50%": { 
+            opacity: "0.8",
+            filter: "brightness(1.2)" 
+          },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-light": "pulse-light 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-      },
-      fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        "pulse-glow": "pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+}

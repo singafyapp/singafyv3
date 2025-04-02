@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { getFavorites, removeFavorite } from "@/services/favorites";
+import { getFavorites, removeFavorite, isFavorite } from "@/services/favorites";
 import { Song } from "@/types";
 import { useNavigate } from "react-router-dom";
 import { Heart } from "lucide-react";
