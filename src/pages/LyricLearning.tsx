@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { LyricLearningCard } from "@/components/learning/LyricLearningCard";
 import { RecommendedSongCard } from "@/components/dashboard/RecommendedSongCard";
@@ -22,7 +21,8 @@ export default function LyricLearning() {
       setCurrentSong(song);
       
       // Generate lyrics for this song
-      generateLyrics(song);
+      const songLyrics = generateLyrics(song);
+      setLyrics(songLyrics);
     } else {
       // If no song is selected, use a default one for demo
       const defaultSong: Song = {
@@ -33,15 +33,27 @@ export default function LyricLearning() {
         duration: 228,
         difficulty: "beginner",
         language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
+        audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
       };
       setCurrentSong(defaultSong);
-      generateLyrics(defaultSong);
+      const defaultLyrics = generateLyrics(defaultSong);
+      setLyrics(defaultLyrics);
     }
     
     // Load recommended songs from favorites
     const favorites = getFavorites();
     if (favorites.length > 0) {
-      setRecommendedSongs(favorites.slice(0, 4)); // Take first 4 favorites as recommendations
+      // Ensure all favorite songs have audio URLs
+      const favoritesWithAudio = favorites.slice(0, 4).map(song => {
+        if (!song.audioUrl) {
+          return {
+            ...song,
+            audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+          };
+        }
+        return song;
+      });
+      setRecommendedSongs(favoritesWithAudio);
     } else {
       // Sample songs if no favorites
       const sampleSongs: Song[] = [
@@ -53,6 +65,7 @@ export default function LyricLearning() {
           duration: 197,
           difficulty: "intermediate",
           language: { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
+          audioUrl: "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd"
         },
         {
           id: "3",
@@ -62,6 +75,7 @@ export default function LyricLearning() {
           duration: 232,
           difficulty: "advanced",
           language: { id: "3", name: "German", code: "de", flag: "🇩🇪" },
+          audioUrl: "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
         },
         {
           id: "4",
@@ -71,113 +85,12 @@ export default function LyricLearning() {
           duration: 195,
           difficulty: "intermediate",
           language: { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
+          audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
         }
       ];
       setRecommendedSongs(sampleSongs);
     }
   }, []);
-
-  const generateLyrics = (song: Song) => {
-    // In a real app, these lyrics would come from an API
-    // Here we'll generate some mock lyrics based on the song
-    const sampleLyrics: Lyric[] = [
-      {
-        id: "1",
-        songId: song.id,
-        startTime: 15,
-        endTime: 18,
-        text: song.language.code === "es" ? "Sí, sabes que ya llevo un rato mirándote" : 
-              song.language.code === "fr" ? "Oui, tu sais que je te regarde depuis un moment" :
-              song.language.code === "de" ? "Ja, du weißt, ich schaue dich schon eine Weile an" :
-              "Yes, you know I've been looking at you for a while",
-        translation: "Yes, you know I've been looking at you for a while",
-        wordFocus: [
-          {
-            id: "1",
-            word: song.language.code === "es" ? "sabes" : 
-                  song.language.code === "fr" ? "sais" :
-                  song.language.code === "de" ? "weißt" : "know",
-            translation: "you know",
-            definition: "To have information in your mind",
-            examples: ["¿Sabes la respuesta?", "Sabes que te quiero."]
-          },
-          {
-            id: "2",
-            word: song.language.code === "es" ? "mirándote" : 
-                  song.language.code === "fr" ? "regarde" :
-                  song.language.code === "de" ? "schaue" : "looking",
-            translation: "looking at you",
-            definition: "To direct your eyes in order to see",
-            examples: ["Estoy mirándote.", "Él está mirándote desde lejos."]
-          }
-        ]
-      },
-      {
-        id: "2",
-        songId: song.id,
-        startTime: 19,
-        endTime: 22,
-        text: song.language.code === "es" ? "Tengo que bailar contigo hoy" : 
-              song.language.code === "fr" ? "Je dois danser avec toi aujourd'hui" :
-              song.language.code === "de" ? "Ich muss heute mit dir tanzen" :
-              "I have to dance with you today",
-        translation: "I have to dance with you today",
-        wordFocus: [
-          {
-            id: "3",
-            word: song.language.code === "es" ? "Tengo" : 
-                  song.language.code === "fr" ? "dois" :
-                  song.language.code === "de" ? "muss" : "have",
-            translation: "I have",
-            definition: "To possess, own, or hold",
-            examples: ["Tengo un coche.", "Tengo que ir."]
-          },
-          {
-            id: "4",
-            word: song.language.code === "es" ? "bailar" : 
-                  song.language.code === "fr" ? "danser" :
-                  song.language.code === "de" ? "tanzen" : "dance",
-            translation: "to dance",
-            definition: "To move rhythmically to music",
-            examples: ["Me gusta bailar.", "¿Quieres bailar conmigo?"]
-          }
-        ]
-      },
-      {
-        id: "3",
-        songId: song.id,
-        startTime: 23,
-        endTime: 26,
-        text: song.language.code === "es" ? "Vi que tu mirada ya estaba llamándome" : 
-              song.language.code === "fr" ? "J'ai vu que ton regard m'appelait déjà" :
-              song.language.code === "de" ? "Ich sah, dass dein Blick mich schon rief" :
-              "I saw that your look was already calling me",
-        translation: "I saw that your look was already calling me",
-        wordFocus: [
-          {
-            id: "6",
-            word: song.language.code === "es" ? "mirada" : 
-                  song.language.code === "fr" ? "regard" :
-                  song.language.code === "de" ? "Blick" : "look",
-            translation: "look/gaze",
-            definition: "A particular expression in someone's eyes",
-            examples: ["Su mirada era intensa.", "Una mirada puede decir mucho."]
-          },
-          {
-            id: "7",
-            word: song.language.code === "es" ? "llamándome" : 
-                  song.language.code === "fr" ? "m'appelait" :
-                  song.language.code === "de" ? "rief" : "calling",
-            translation: "calling me",
-            definition: "To cry out to someone",
-            examples: ["Está llamándome por teléfono.", "Siento que estás llamándome."]
-          }
-        ]
-      },
-    ];
-    
-    setLyrics(sampleLyrics);
-  };
 
   const handleSelectSong = (song: Song) => {
     // Ensure the song has an audio URL for demo purposes

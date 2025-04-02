@@ -27,6 +27,7 @@ export default function MainLayout() {
         const song = JSON.parse(savedSong);
         setCurrentSong(song);
         console.log("Selected song loaded from localStorage:", song.title);
+        console.log("Audio source:", song.audioUrl);
       } catch (e) {
         console.error("Error parsing song from localStorage:", e);
       }
@@ -59,7 +60,7 @@ export default function MainLayout() {
         <MobileNav />
         
         {/* Music Player - Fixed at the bottom */}
-        {showMusicPlayer && <MusicPlayer songUrl={currentSong?.audioUrl} />}
+        {showMusicPlayer && <MusicPlayer songUrl={currentSong?.audioUrl || ''} />}
       </div>
     </div>
   );

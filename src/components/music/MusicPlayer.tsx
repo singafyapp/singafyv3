@@ -1,176 +1,157 @@
-
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { 
-  ChevronDown,
-  Heart,
-  ListMusic,
-  MoreHorizontal,
-  Pause,
-  Play,
-  Repeat,
-  Shuffle,
-  SkipBack,
-  SkipForward,
-  Volume2
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
+import { 
+  Play, 
+  Pause, 
+  SkipBack, 
+  SkipForward, 
+  Volume2, 
+  VolumeX,
+  Repeat,
+  Shuffle
+} from "lucide-react";
 
 interface MusicPlayerProps {
-  className?: string;
-  expanded?: boolean;
   songUrl?: string;
 }
 
-export function MusicPlayer({ className, expanded = false, songUrl }: MusicPlayerProps) {
+export function MusicPlayer({ songUrl }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(70);
-  const [liked, setLiked] = useState(false);
+  const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(228);
-  
+  const [volume, setVolume] = useState(0.7);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
-  // Create audio element on mount
+  // Initialize audio element
   useEffect(() => {
-    audioRef.current = new Audio();
-    audioRef.current.volume = volume / 100;
+    const audio = new Audio();
+    audioRef.current = audio;
     
-    // Use a working preview URL if no songUrl provided
-    const defaultAudio = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-    audioRef.current.src = songUrl || defaultAudio;
+    // Set up event listeners
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadMetadata);
+    audio.addEventListener('ended', handleEnded);
     
-    audioRef.current.addEventListener('loadedmetadata', () => {
-      if (audioRef.current) {
-        setDuration(audioRef.current.duration);
-      }
-    });
-    
-    audioRef.current.addEventListener('timeupdate', updateProgress);
-    audioRef.current.addEventListener('ended', handleSongEnd);
-    
-    // Log audio element creation
-    console.log("Audio element created with src:", audioRef.current.src);
-    
+    // Clean up
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener('timeupdate', updateProgress);
-        audioRef.current.removeEventListener('ended', handleSongEnd);
-      }
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
     };
+  }, []);
+  
+  // Update audio source when songUrl changes
+  useEffect(() => {
+    if (audioRef.current && songUrl) {
+      audioRef.current.src = songUrl;
+      audioRef.current.load();
+      setCurrentTime(0);
+      setDuration(0);
+      
+      // Auto-play when a new song is loaded
+      audioRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+          console.log("Music player started playback");
+        })
+        .catch(error => {
+          console.error("Playback failed:", error);
+          setIsPlaying(false);
+        });
+    }
   }, [songUrl]);
   
-  // Update volume when changed
+  // Update volume
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
+      audioRef.current.volume = isMuted ? 0 : volume;
     }
-  }, [volume]);
+  }, [volume, isMuted]);
   
-  const updateProgress = () => {
+  const handleTimeUpdate = () => {
     if (audioRef.current) {
-      const current = audioRef.current.currentTime;
-      setCurrentTime(current);
-      setProgress((current / duration) * 100);
+      setCurrentTime(audioRef.current.currentTime);
     }
   };
   
-  const handleSongEnd = () => {
+  const handleLoadMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+  
+  const handleEnded = () => {
     setIsPlaying(false);
-    setProgress(0);
     setCurrentTime(0);
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-    }
+    // Could implement auto-next song functionality here
   };
-
+  
   const togglePlay = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
-        setIsPlaying(false);
       } else {
-        // Add a small delay to ensure audio is loaded
-        setTimeout(() => {
-          if (audioRef.current) {
-            audioRef.current.play().then(() => {
-              setIsPlaying(true);
-              console.log("Audio playback started successfully");
-            }).catch(error => {
-              console.error('Playback failed:', error);
-              toast({
-                title: "Playback Error",
-                description: "Unable to play audio. Please try a different song.",
-                variant: "destructive",
-              });
-              setIsPlaying(false);
-            });
-          }
-        }, 100);
+        audioRef.current.play()
+          .catch(error => console.error("Playback failed:", error));
       }
+      setIsPlaying(!isPlaying);
     }
   };
   
-  const handleProgressChange = (values: number[]) => {
-    const newProgress = values[0];
-    setProgress(newProgress);
+  const handleSeek = (value: number[]) => {
     if (audioRef.current) {
-      const newTime = (newProgress / 100) * duration;
+      const newTime = value[0];
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
   };
   
-  const toggleLike = () => setLiked(!liked);
-
-  const song = {
-    title: "Despacito",
-    artist: "Luis Fonsi ft. Daddy Yankee",
-    albumCover: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&h=300",
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0];
+    setVolume(newVolume);
+    if (newVolume === 0) {
+      setIsMuted(true);
+    } else {
+      setIsMuted(false);
+    }
+  };
+  
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
   };
 
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black to-spotify-black/95 backdrop-blur-lg border-t border-white/5 py-2 px-3 md:p-4 z-50",
-      "h-20 md:h-20",
-      className
-    )}>
-      <div className="max-w-7xl mx-auto flex items-center gap-3">
-        {/* Song info */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-12 h-12 bg-spotify-lightgray rounded overflow-hidden hidden md:block">
-            <img 
-              src={song.albumCover} 
-              alt={song.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="min-w-0 hidden sm:block">
-            <h4 className="font-medium text-sm md:text-base truncate">{song.title}</h4>
-            <p className="text-xs text-muted-foreground truncate">{song.artist}</p>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-muted-foreground hover:text-white hidden md:flex"
-            onClick={toggleLike}
-          >
-            <Heart className={cn("h-4 w-4", liked && "fill-primary text-primary")} />
-          </Button>
+    <div className="fixed bottom-0 left-0 right-0 bg-spotify-darkgray border-t border-white/5 p-3 z-50">
+      <div className="flex items-center justify-between max-w-screen-xl mx-auto">
+        {/* Song Info - Hidden on small screens */}
+        <div className="hidden sm:flex items-center space-x-3 w-1/4">
+          {songUrl ? (
+            <>
+              <div className="w-12 h-12 bg-spotify-black rounded-md flex items-center justify-center">
+                <MusicIcon className="h-6 w-6 text-primary" />
+              </div>
+              <div className="truncate">
+                <div className="text-sm font-medium truncate">Now Playing</div>
+                <div className="text-xs text-muted-foreground truncate">Language Learning</div>
+              </div>
+            </>
+          ) : (
+            <div className="text-sm text-muted-foreground">No song selected</div>
+          )}
         </div>
         
-        {/* Player controls */}
-        <div className="flex flex-col items-center gap-1 flex-1 max-w-xl">
-          <div className="flex items-center gap-2">
+        {/* Player Controls */}
+        <div className="flex flex-col items-center w-full sm:w-2/4">
+          <div className="flex items-center space-x-2 mb-1">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-muted-foreground hover:text-white hidden sm:flex"
+              className="h-8 w-8 text-muted-foreground hover:text-white"
+              disabled={!songUrl}
             >
               <Shuffle className="h-4 w-4" />
             </Button>
@@ -178,82 +159,93 @@ export function MusicPlayer({ className, expanded = false, songUrl }: MusicPlaye
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-muted-foreground hover:text-white"
+              disabled={!songUrl}
             >
               <SkipBack className="h-4 w-4" />
             </Button>
             <Button 
-              variant="ghost" 
+              onClick={togglePlay} 
+              disabled={!songUrl}
+              variant="outline" 
               size="icon" 
-              className="h-9 w-9 rounded-full bg-white text-black hover:bg-white/90 hover:scale-105 transition-transform"
-              onClick={togglePlay}
+              className="h-8 w-8 rounded-full bg-white text-black hover:bg-white/90 hover:text-black"
             >
-              {isPlaying ? (
-                <Pause className="h-5 w-5" />
-              ) : (
-                <Play className="h-5 w-5 ml-0.5" />
-              )}
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-muted-foreground hover:text-white"
+              disabled={!songUrl}
             >
               <SkipForward className="h-4 w-4" />
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 text-muted-foreground hover:text-white hidden sm:flex"
+              className="h-8 w-8 text-muted-foreground hover:text-white"
+              disabled={!songUrl}
             >
               <Repeat className="h-4 w-4" />
             </Button>
           </div>
           
-          <div className="w-full hidden md:flex items-center gap-2">
-            <span className="text-xs text-muted-foreground w-8 text-right">
-              {formatTime(currentTime)}
-            </span>
+          <div className="flex items-center w-full space-x-2">
+            <div className="text-xs w-10 text-right">{formatTime(currentTime)}</div>
             <Slider
-              value={[progress]}
-              max={100}
-              step={1}
-              className="w-full h-1"
-              onValueChange={handleProgressChange}
+              value={[currentTime]}
+              min={0}
+              max={duration || 100}
+              step={0.1}
+              onValueChange={handleSeek}
+              disabled={!songUrl}
+              className="w-full"
             />
-            <span className="text-xs text-muted-foreground w-8">
-              {formatTime(duration)}
-            </span>
+            <div className="text-xs w-10">{formatTime(duration)}</div>
           </div>
         </div>
         
-        {/* Right controls */}
-        <div className="flex items-center gap-2 flex-1 justify-end">
+        {/* Volume Control - Hidden on small screens */}
+        <div className="hidden sm:flex items-center space-x-2 w-1/4 justify-end">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 text-muted-foreground hover:text-white hidden lg:flex"
+            onClick={toggleMute}
+            className="h-8 w-8 text-muted-foreground hover:text-white"
           >
-            <ListMusic className="h-4 w-4" />
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </Button>
-          <div className="items-center gap-1 hidden lg:flex">
-            <Volume2 className="h-4 w-4 text-muted-foreground" />
-            <Slider
-              value={[volume]}
-              max={100}
-              step={1}
-              className="w-24 h-1"
-              onValueChange={(values) => setVolume(values[0])}
-            />
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-muted-foreground hover:text-white hidden md:flex"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
+          <Slider
+            value={[isMuted ? 0 : volume]}
+            min={0}
+            max={1}
+            step={0.01}
+            onValueChange={handleVolumeChange}
+            className="w-20"
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+function MusicIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="18" cy="16" r="3" />
+    </svg>
   );
 }
