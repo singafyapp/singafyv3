@@ -33,8 +33,9 @@ export default function LyricLearning() {
         const songLyrics = generateLyrics(song);
         setLyrics(songLyrics);
         console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
-      } else {
-        // If no song is selected, use a default one for demo
+      } catch (error) {
+        console.error("Error parsing saved song:", error);
+        // If there's an error, use a default song for demo
         const defaultSong: Song = {
           id: "1",
           title: "Despacito",
