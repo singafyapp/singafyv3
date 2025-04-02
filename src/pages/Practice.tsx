@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Language, Song, PracticeExercise } from "@/types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +42,33 @@ export default function Practice() {
     // Use a random clip for demo
     audioRef.current.src = demoClips[Math.floor(Math.random() * demoClips.length)];
     
+    // Load selected song from local storage
+    const savedSong = localStorage.getItem('selectedSong');
+    if (savedSong) {
+      try {
+        const song: Song = JSON.parse(savedSong);
+        
+        // Add audio URL if missing (for testing purposes)
+        if (!song.audioUrl) {
+          song.audioUrl = demoClips[Math.floor(Math.random() * demoClips.length)];
+        }
+        
+        setSelectedSong(song);
+        setCurrentLanguage(song.language);
+        
+        if (audioRef.current) {
+          audioRef.current.src = song.audioUrl || demoClips[0];
+        }
+        
+        // Generate practice exercises for this song
+        const songExercises = generateExercises(song);
+        setExercises(songExercises);
+        console.log(`Generated ${songExercises.length} exercises for ${song.title}`);
+      } catch (e) {
+        console.error("Error parsing song from localStorage:", e);
+      }
+    }
+    
     // Cleanup audio element on unmount
     return () => {
       if (audioRef.current) {
@@ -51,27 +77,17 @@ export default function Practice() {
       }
     };
   }, []);
-  
-  useEffect(() => {
-    // Load selected song from local storage
-    const savedSong = localStorage.getItem('selectedSong');
-    if (savedSong) {
-      const song: Song = JSON.parse(savedSong);
-      setSelectedSong(song);
-      setCurrentLanguage(song.language);
-      
-      // Generate practice exercises for this song
-      const generatedExercises = generateExercises(song);
-      setExercises(generatedExercises);
-    }
-  }, []);
 
   const handlePlayAudio = () => {
     if (audioRef.current) {
       if (isAudioPlaying) {
         audioRef.current.pause();
+        setIsAudioPlaying(false);
       } else {
-        audioRef.current.play().catch(error => {
+        audioRef.current.play().then(() => {
+          setIsAudioPlaying(true);
+          console.log("Practice audio playing successfully");
+        }).catch(error => {
           console.error('Audio playback failed:', error);
           toast({
             title: "Playback Error",
@@ -80,7 +96,6 @@ export default function Practice() {
           });
         });
       }
-      setIsAudioPlaying(!isAudioPlaying);
     }
   };
 

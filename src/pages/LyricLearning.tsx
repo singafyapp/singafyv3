@@ -7,6 +7,7 @@ import { MusicIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { getFavorites } from "@/services/favorites";
+import { generateLyrics } from "@/services/lyricService";
 
 export default function LyricLearning() {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
@@ -179,13 +180,24 @@ export default function LyricLearning() {
   };
 
   const handleSelectSong = (song: Song) => {
+    // Ensure the song has an audio URL for demo purposes
+    if (!song.audioUrl) {
+      const sampleUrls = [
+        "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
+        "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
+        "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
+      ];
+      song.audioUrl = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
+    }
+    
     setCurrentSong(song);
-    generateLyrics(song);
+    const songLyrics = generateLyrics(song);
+    setLyrics(songLyrics);
     localStorage.setItem('selectedSong', JSON.stringify(song));
     
     toast({
       title: "Song Selected",
-      description: `Now learning "${song.title}" by ${song.artist}`,
+      description: `Now learning "${song.title}" by ${song.artist} in ${song.language.name}`,
     });
   };
 
@@ -223,13 +235,13 @@ export default function LyricLearning() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold mb-1">Lyric Learning</h1>
-          <p className="text-muted-foreground">Learn {currentSong.language.name} through song lyrics</p>
+          <p className="text-muted-foreground">Learn {currentSong?.language.name} through song lyrics</p>
         </div>
       </div>
       
       {/* Current Learning */}
       <div>
-        <LyricLearningCard song={currentSong} lyrics={lyrics} />
+        <LyricLearningCard song={currentSong!} lyrics={lyrics} />
       </div>
       
       {/* More Songs For Learning */}

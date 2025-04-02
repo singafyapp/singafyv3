@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Info, MusicIcon, Play } from "lucide-react";
+import { ChevronRight, Info, MusicIcon, Play, Pause } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Song, Lyric, WordFocus } from "@/types";
@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "@/hooks/use-toast";
 
 interface LyricLearningCardProps {
   song: Song;
@@ -22,10 +23,81 @@ interface LyricLearningCardProps {
 export function LyricLearningCard({ song, lyrics }: LyricLearningCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  useEffect(() => {
+    // Create audio element
+    audioRef.current = new Audio();
+    
+    // Use the song's audio URL or a fallback
+    if (song.audioUrl) {
+      audioRef.current.src = song.audioUrl;
+      console.log("Learning card audio source:", song.audioUrl);
+    } else {
+      // Fallback preview URL that is known to work
+      audioRef.current.src = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+      console.log("Using fallback audio source");
+    }
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [song]);
   
   const togglePlay = () => {
-    setIsPlaying(!isPlaying);
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+            console.log("Learning card audio playback started");
+          })
+          .catch(error => {
+            console.error('Playback failed:', error);
+            toast({
+              title: "Audio Playback Error",
+              description: "Unable to play this song. Please try another song.",
+              variant: "destructive",
+            });
+          });
+      }
+    }
   };
+
+  // Change lyric based on audio time
+  useEffect(() => {
+    if (!isPlaying || !lyrics || lyrics.length === 0 || !audioRef.current) return;
+    
+    const handleTimeUpdate = () => {
+      if (!audioRef.current || !lyrics) return;
+      
+      const currentTime = audioRef.current.currentTime;
+      
+      // Find the current lyric based on the audio time
+      for (let i = 0; i < lyrics.length; i++) {
+        if (currentTime >= lyrics[i].startTime && currentTime <= lyrics[i].endTime) {
+          if (currentLyricIndex !== i) {
+            setCurrentLyricIndex(i);
+          }
+          break;
+        }
+      }
+    };
+    
+    audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+      }
+    };
+  }, [isPlaying, lyrics, currentLyricIndex]);
 
   return (
     <Card className="bg-spotify-darkgray border-white/5 overflow-hidden">
@@ -59,7 +131,7 @@ export function LyricLearningCard({ song, lyrics }: LyricLearningCardProps) {
           >
             {isPlaying ? (
               <>
-                Pause <MusicIcon className="h-4 w-4" />
+                Pause <Pause className="h-4 w-4" />
               </>
             ) : (
               <>
@@ -72,9 +144,9 @@ export function LyricLearningCard({ song, lyrics }: LyricLearningCardProps) {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Learning Progress</span>
-                <span>30%</span>
+                <span>{Math.round((currentLyricIndex / (lyrics?.length || 1)) * 100)}%</span>
               </div>
-              <Progress value={30} className="h-2" />
+              <Progress value={Math.round((currentLyricIndex / (lyrics?.length || 1)) * 100)} className="h-2" />
             </div>
             
             <div className="bg-white/5 rounded-md p-3">
@@ -83,7 +155,7 @@ export function LyricLearningCard({ song, lyrics }: LyricLearningCardProps) {
               </h4>
               <div className="text-sm grid gap-1">
                 <div className="flex items-center gap-1">
-                  <span className="text-primary">7</span> new words
+                  <span className="text-primary">{lyrics?.reduce((count, lyric) => count + (lyric.wordFocus?.length || 0), 0) || 7}</span> new words
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-primary">4</span> expressions

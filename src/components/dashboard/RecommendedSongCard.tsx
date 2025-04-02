@@ -38,6 +38,22 @@ export function RecommendedSongCard({
     }
   };
   
+  const handleLearnClick = () => {
+    // Add audio URL if missing
+    if (!song.audioUrl) {
+      const sampleUrls = [
+        "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
+        "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
+        "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
+      ];
+      song.audioUrl = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
+    }
+    
+    if (onLearn) {
+      onLearn();
+    }
+  };
+  
   const isHorizontal = layout === "horizontal";
   
   return (
@@ -107,7 +123,7 @@ export function RecommendedSongCard({
                 <Button size="sm" variant="secondary" className="text-xs">Practice with this song</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-spotify-lightgray border-white/10">
-                <DropdownMenuItem onClick={onLearn} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleLearnClick} className="cursor-pointer">
                   <BookOpen className="h-4 w-4 mr-2" />
                   <span>Lyric Learning</span>
                 </DropdownMenuItem>

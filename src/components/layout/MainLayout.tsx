@@ -7,6 +7,7 @@ import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import { MusicPlayer } from "../music/MusicPlayer";
 import { Song } from "@/types";
+import { toast } from "@/hooks/use-toast";
 
 export default function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -25,6 +26,7 @@ export default function MainLayout() {
       try {
         const song = JSON.parse(savedSong);
         setCurrentSong(song);
+        console.log("Selected song loaded from localStorage:", song.title);
       } catch (e) {
         console.error("Error parsing song from localStorage:", e);
       }

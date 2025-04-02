@@ -40,7 +40,7 @@ export function MusicPlayer({ className, expanded = false, songUrl }: MusicPlaye
     audioRef.current = new Audio();
     audioRef.current.volume = volume / 100;
     
-    // Load default audio if no songUrl provided
+    // Use a working preview URL if no songUrl provided
     const defaultAudio = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
     audioRef.current.src = songUrl || defaultAudio;
     
@@ -52,6 +52,9 @@ export function MusicPlayer({ className, expanded = false, songUrl }: MusicPlaye
     
     audioRef.current.addEventListener('timeupdate', updateProgress);
     audioRef.current.addEventListener('ended', handleSongEnd);
+    
+    // Log audio element creation
+    console.log("Audio element created with src:", audioRef.current.src);
     
     return () => {
       if (audioRef.current) {
@@ -90,17 +93,26 @@ export function MusicPlayer({ className, expanded = false, songUrl }: MusicPlaye
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
-        audioRef.current.play().catch(error => {
-          console.error('Playback failed:', error);
-          toast({
-            title: "Playback Error",
-            description: "Unable to play audio. Please try again.",
-            variant: "destructive",
-          });
-        });
+        // Add a small delay to ensure audio is loaded
+        setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.play().then(() => {
+              setIsPlaying(true);
+              console.log("Audio playback started successfully");
+            }).catch(error => {
+              console.error('Playback failed:', error);
+              toast({
+                title: "Playback Error",
+                description: "Unable to play audio. Please try a different song.",
+                variant: "destructive",
+              });
+              setIsPlaying(false);
+            });
+          }
+        }, 100);
       }
-      setIsPlaying(!isPlaying);
     }
   };
   
