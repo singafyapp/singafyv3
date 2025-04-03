@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { formatTime } from "@/lib/utils";
+import { Song } from "@/types";
 import { 
   Play, 
   Pause, 
@@ -13,12 +14,13 @@ import {
   Repeat,
   Shuffle
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface MusicPlayerProps {
-  songUrl?: string;
+  song: Song;
 }
 
-export function MusicPlayer({ songUrl }: MusicPlayerProps) {
+export function MusicPlayer({ song }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -35,35 +37,38 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadMetadata);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleAudioError);
     
     // Clean up
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadMetadata);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleAudioError);
       audio.pause();
     };
   }, []);
   
-  // Update audio source when songUrl changes
+  // Update audio source when song changes
   useEffect(() => {
-    if (audioRef.current && songUrl) {
-      // Check if URL is empty or undefined
-      if (songUrl.trim() === '') {
-        console.error("Empty song URL provided to MusicPlayer");
-        return;
-      }
-      
-      console.log("Music player setting audio source:", songUrl);
-      audioRef.current.src = songUrl;
-      audioRef.current.load();
-      setCurrentTime(0);
-      setDuration(0);
-      
-      // Don't auto-play when a new song is loaded - let user decide
+    if (!audioRef.current || !song || !song.audioUrl) return;
+    
+    console.log("Music player setting audio source:", song.audioUrl);
+    
+    // Reset state
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    
+    // Set new source
+    audioRef.current.src = song.audioUrl;
+    audioRef.current.load();
+    
+    // Update display
+    if (audioRef.current.paused) {
       setIsPlaying(false);
     }
-  }, [songUrl]);
+  }, [song]);
   
   // Update volume
   useEffect(() => {
@@ -88,22 +93,25 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
   const handleEnded = () => {
     setIsPlaying(false);
     setCurrentTime(0);
-    // Could implement auto-next song functionality here
+  };
+  
+  const handleAudioError = (e: Event) => {
+    console.error("Audio error:", e);
+    toast({
+      title: "Playback Error",
+      description: "Could not play this song. The audio file might be unavailable.",
+      variant: "destructive",
+    });
+    setIsPlaying(false);
   };
   
   const togglePlay = () => {
-    if (!audioRef.current || !songUrl) return;
+    if (!audioRef.current || !song.audioUrl) return;
     
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      // Ensure we have the latest source
-      if (songUrl !== audioRef.current.src) {
-        audioRef.current.src = songUrl;
-        audioRef.current.load();
-      }
-      
       audioRef.current.play()
         .then(() => {
           setIsPlaying(true);
@@ -111,21 +119,11 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
         })
         .catch(error => {
           console.error("Playback failed:", error);
-          
-          // Try with a fallback URL if original fails
-          const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-          console.log("Trying with fallback URL:", fallbackUrl);
-          
-          audioRef.current!.src = fallbackUrl;
-          audioRef.current!.load();
-          audioRef.current!.play()
-            .then(() => {
-              setIsPlaying(true);
-              console.log("Fallback playback started");
-            })
-            .catch(secondError => {
-              console.error("Fallback playback also failed:", secondError);
-            });
+          toast({
+            title: "Playback Error",
+            description: "Could not play this song. Please try again.",
+            variant: "destructive",
+          });
         });
     }
   };
@@ -155,16 +153,20 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-spotify-darkgray border-t border-white/5 p-3 z-50">
       <div className="flex items-center justify-between max-w-screen-xl mx-auto">
-        {/* Song Info - Hidden on small screens */}
+        {/* Song Info */}
         <div className="hidden sm:flex items-center space-x-3 w-1/4">
-          {songUrl ? (
+          {song ? (
             <>
-              <div className="w-12 h-12 bg-spotify-black rounded-md flex items-center justify-center">
-                <MusicIcon className="h-6 w-6 text-primary" />
+              <div className="w-12 h-12 bg-cover rounded-md overflow-hidden">
+                <img 
+                  src={song.albumCover} 
+                  alt={`${song.title} cover`}
+                  className="w-full h-full object-cover" 
+                />
               </div>
               <div className="truncate">
-                <div className="text-sm font-medium truncate">Now Playing</div>
-                <div className="text-xs text-muted-foreground truncate">Language Learning</div>
+                <div className="text-sm font-medium truncate">{song.title}</div>
+                <div className="text-xs text-muted-foreground truncate">{song.artist}</div>
               </div>
             </>
           ) : (
@@ -179,7 +181,7 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-muted-foreground hover:text-white"
-              disabled={!songUrl}
+              disabled={!song}
             >
               <Shuffle className="h-4 w-4" />
             </Button>
@@ -187,13 +189,13 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-muted-foreground hover:text-white"
-              disabled={!songUrl}
+              disabled={!song}
             >
               <SkipBack className="h-4 w-4" />
             </Button>
             <Button 
               onClick={togglePlay} 
-              disabled={!songUrl}
+              disabled={!song?.audioUrl}
               variant="outline" 
               size="icon" 
               className="h-8 w-8 rounded-full bg-white text-black hover:bg-white/90 hover:text-black"
@@ -204,7 +206,7 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-muted-foreground hover:text-white"
-              disabled={!songUrl}
+              disabled={!song}
             >
               <SkipForward className="h-4 w-4" />
             </Button>
@@ -212,7 +214,7 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-muted-foreground hover:text-white"
-              disabled={!songUrl}
+              disabled={!song}
             >
               <Repeat className="h-4 w-4" />
             </Button>
@@ -226,7 +228,7 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
               max={duration || 100}
               step={0.1}
               onValueChange={handleSeek}
-              disabled={!songUrl}
+              disabled={!song?.audioUrl}
               className="w-full"
             />
             <div className="text-xs w-10">{formatTime(duration)}</div>
@@ -254,26 +256,5 @@ export function MusicPlayer({ songUrl }: MusicPlayerProps) {
         </div>
       </div>
     </div>
-  );
-}
-
-function MusicIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 18V5l12-2v13" />
-      <circle cx="6" cy="18" r="3" />
-      <circle cx="18" cy="16" r="3" />
-    </svg>
   );
 }

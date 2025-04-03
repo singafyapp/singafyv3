@@ -5,12 +5,6 @@ import { formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface RecommendedSongCardProps {
   song: Song;
@@ -25,7 +19,6 @@ export function RecommendedSongCard({
   song, 
   onFavorite,
   onLearn,
-  onPractice,
   showActions = false,
   layout = "vertical"
 }: RecommendedSongCardProps) {
@@ -39,14 +32,15 @@ export function RecommendedSongCard({
   };
   
   const handleLearnClick = () => {
-    // Add audio URL if missing
-    if (!song.audioUrl) {
+    // Ensure there is audio URL before learning
+    if (!song.audioUrl || song.audioUrl.trim() === '') {
       const sampleUrls = [
         "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
         "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
         "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
       ];
       song.audioUrl = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
+      console.log("Added audio URL to song before learning:", song.title, song.audioUrl);
     }
     
     if (onLearn) {

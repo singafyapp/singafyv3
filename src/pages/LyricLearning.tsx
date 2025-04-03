@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { LyricLearningCard } from "@/components/learning/LyricLearningCard";
 import { RecommendedSongCard } from "@/components/dashboard/RecommendedSongCard";
-import { Lyric, Song, WordFocus } from "@/types";
+import { Lyric, Song } from "@/types";
 import { MusicIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -35,40 +35,13 @@ export default function LyricLearning() {
         console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
       } catch (error) {
         console.error("Error parsing saved song:", error);
-        // If there's an error, use a default song for demo
-        const defaultSong: Song = {
-          id: "1",
-          title: "Despacito",
-          artist: "Luis Fonsi ft. Daddy Yankee",
-          albumCover: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&h=300",
-          duration: 228,
-          difficulty: "beginner",
-          language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
-          audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
-        };
-        setCurrentSong(defaultSong);
         
-        // Generate lyrics for default song
-        const defaultLyrics = generateLyrics(defaultSong);
-        setLyrics(defaultLyrics);
+        // If there's an error, use a default song for demo
+        loadDefaultSong();
       }
     } else {
       // If no song is selected, use a default one for demo
-      const defaultSong: Song = {
-        id: "1",
-        title: "Despacito",
-        artist: "Luis Fonsi ft. Daddy Yankee",
-        albumCover: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&h=300",
-        duration: 228,
-        difficulty: "beginner",
-        language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
-        audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
-      };
-      setCurrentSong(defaultSong);
-      
-      // Generate lyrics for default song
-      const defaultLyrics = generateLyrics(defaultSong);
-      setLyrics(defaultLyrics);
+      loadDefaultSong();
     }
     
     // Load recommended songs from favorites
@@ -87,41 +60,63 @@ export default function LyricLearning() {
       setRecommendedSongs(favoritesWithAudio);
     } else {
       // Sample songs if no favorites
-      const sampleSongs: Song[] = [
-        {
-          id: "2",
-          title: "La Vie En Rose",
-          artist: "Edith Piaf",
-          albumCover: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=300&h=300",
-          duration: 197,
-          difficulty: "intermediate",
-          language: { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
-          audioUrl: "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd"
-        },
-        {
-          id: "3",
-          title: "99 Luftballons",
-          artist: "Nena",
-          albumCover: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300",
-          duration: 232,
-          difficulty: "advanced",
-          language: { id: "3", name: "German", code: "de", flag: "🇩🇪" },
-          audioUrl: "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
-        },
-        {
-          id: "4",
-          title: "Volare",
-          artist: "Domenico Modugno",
-          albumCover: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=300&h=300",
-          duration: 195,
-          difficulty: "intermediate",
-          language: { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
-          audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
-        }
-      ];
-      setRecommendedSongs(sampleSongs);
+      loadSampleSongs();
     }
   }, []);
+
+  const loadDefaultSong = () => {
+    const defaultSong: Song = {
+      id: "1",
+      title: "Despacito",
+      artist: "Luis Fonsi ft. Daddy Yankee",
+      albumCover: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&h=300",
+      duration: 228,
+      difficulty: "beginner",
+      language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
+      audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+    };
+    setCurrentSong(defaultSong);
+    
+    // Generate lyrics for default song
+    const defaultLyrics = generateLyrics(defaultSong);
+    setLyrics(defaultLyrics);
+  };
+
+  const loadSampleSongs = () => {
+    const sampleSongs: Song[] = [
+      {
+        id: "2",
+        title: "La Vie En Rose",
+        artist: "Edith Piaf",
+        albumCover: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=300&h=300",
+        duration: 197,
+        difficulty: "intermediate",
+        language: { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
+        audioUrl: "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd"
+      },
+      {
+        id: "3",
+        title: "99 Luftballons",
+        artist: "Nena",
+        albumCover: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=300&h=300",
+        duration: 232,
+        difficulty: "advanced",
+        language: { id: "3", name: "German", code: "de", flag: "🇩🇪" },
+        audioUrl: "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
+      },
+      {
+        id: "4",
+        title: "Volare",
+        artist: "Domenico Modugno",
+        albumCover: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=300&h=300",
+        duration: 195,
+        difficulty: "intermediate",
+        language: { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
+        audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+      }
+    ];
+    setRecommendedSongs(sampleSongs);
+  };
 
   const handleSelectSong = (song: Song) => {
     // Ensure the song has an audio URL for demo purposes
@@ -206,6 +201,7 @@ export default function LyricLearning() {
               song={song} 
               layout="horizontal" 
               onLearn={() => handleSelectSong(song)}
+              showActions={true}
             />
           ))}
         </div>

@@ -21,23 +21,26 @@ export default function MainLayout() {
   
   // Check for selected song in local storage
   useEffect(() => {
-    const savedSong = localStorage.getItem('selectedSong');
-    if (savedSong) {
+    const savedSongJson = localStorage.getItem('selectedSong');
+    if (savedSongJson) {
       try {
-        const song = JSON.parse(savedSong);
+        const savedSong = JSON.parse(savedSongJson);
         
         // Ensure song has a valid audio URL
-        if (!song.audioUrl || song.audioUrl.trim() === '') {
-          const fallbackUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-          console.log("Setting fallback audio URL:", fallbackUrl);
-          song.audioUrl = fallbackUrl;
+        if (!savedSong.audioUrl || savedSong.audioUrl.trim() === '') {
+          toast({
+            title: "Audio Unavailable",
+            description: "This song doesn't have audio available. Using a placeholder.",
+            variant: "destructive",
+          });
         }
         
-        setCurrentSong(song);
-        console.log("Selected song loaded from localStorage:", song.title);
-        console.log("Audio source:", song.audioUrl);
+        setCurrentSong(savedSong);
+        console.log("Selected song loaded from localStorage:", savedSong.title);
+        console.log("Audio source:", savedSong.audioUrl);
       } catch (e) {
         console.error("Error parsing song from localStorage:", e);
+        localStorage.removeItem('selectedSong');
       }
     }
   }, [location.pathname]);
@@ -68,8 +71,8 @@ export default function MainLayout() {
         <MobileNav />
         
         {/* Music Player - Fixed at the bottom */}
-        {showMusicPlayer && currentSong?.audioUrl && 
-          <MusicPlayer songUrl={currentSong.audioUrl} />
+        {showMusicPlayer && currentSong && 
+          <MusicPlayer song={currentSong} />
         }
       </div>
     </div>
