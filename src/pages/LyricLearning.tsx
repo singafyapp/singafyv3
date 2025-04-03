@@ -2,17 +2,19 @@
 import { useState, useEffect } from "react";
 import { LyricLearningCard } from "@/components/learning/LyricLearningCard";
 import { RecommendedSongCard } from "@/components/dashboard/RecommendedSongCard";
-import { Lyric, Song } from "@/types";
+import { Lyric, Song, Language, availableLanguages } from "@/types";
 import { MusicIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { getFavorites } from "@/services/favorites";
 import { generateLyrics } from "@/services/lyricService";
+import { LanguageSelector } from "@/components/learning/LanguageSelector";
 
 export default function LyricLearning() {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
   const [lyrics, setLyrics] = useState<Lyric[]>([]);
+  const [targetLanguage, setTargetLanguage] = useState<Language | null>(null);
   
   useEffect(() => {
     // Load selected song from local storage
@@ -28,9 +30,10 @@ export default function LyricLearning() {
         }
         
         setCurrentSong(song);
+        setTargetLanguage(song.language); // Set initial target language to song's language
         
         // Generate lyrics for this song - store in variable first to prevent TS error
-        const songLyrics = generateLyrics(song);
+        const songLyrics = generateLyrics(song, targetLanguage);
         setLyrics(songLyrics);
         console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
       } catch (error) {
@@ -64,6 +67,22 @@ export default function LyricLearning() {
     }
   }, []);
 
+  // Update lyrics when target language changes
+  useEffect(() => {
+    if (currentSong && targetLanguage) {
+      const translatedLyrics = generateLyrics(currentSong, targetLanguage);
+      setLyrics(translatedLyrics);
+      
+      // Only show toast if the language is different from the song's original language
+      if (targetLanguage.id !== currentSong.language.id) {
+        toast({
+          title: "Language Changed",
+          description: `Lyrics now translated to ${targetLanguage.name} ${targetLanguage.flag}`,
+        });
+      }
+    }
+  }, [targetLanguage, currentSong]);
+
   const loadDefaultSong = () => {
     const defaultSong: Song = {
       id: "1",
@@ -76,9 +95,10 @@ export default function LyricLearning() {
       audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
     };
     setCurrentSong(defaultSong);
+    setTargetLanguage(defaultSong.language);
     
     // Generate lyrics for default song
-    const defaultLyrics = generateLyrics(defaultSong);
+    const defaultLyrics = generateLyrics(defaultSong, defaultSong.language);
     setLyrics(defaultLyrics);
   };
 
@@ -118,6 +138,13 @@ export default function LyricLearning() {
     setRecommendedSongs(sampleSongs);
   };
 
+  const handleLanguageChange = (languageId: string) => {
+    const newLanguage = availableLanguages.find(lang => lang.id === languageId);
+    if (newLanguage) {
+      setTargetLanguage(newLanguage);
+    }
+  };
+
   const handleSelectSong = (song: Song) => {
     // Ensure the song has an audio URL for demo purposes
     if (!song.audioUrl || song.audioUrl.trim() === '') {
@@ -131,9 +158,10 @@ export default function LyricLearning() {
     }
     
     setCurrentSong(song);
+    setTargetLanguage(song.language);
     
     // Generate lyrics for this song - store in variable first to prevent TS error
-    const songLyrics = generateLyrics(song);
+    const songLyrics = generateLyrics(song, song.language);
     setLyrics(songLyrics);
     console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
     
@@ -181,11 +209,23 @@ export default function LyricLearning() {
           <h1 className="text-2xl font-bold mb-1">Lyric Learning</h1>
           <p className="text-muted-foreground">Learn {currentSong?.language.name} through song lyrics</p>
         </div>
+        
+        {/* Add language selector */}
+        {targetLanguage && (
+          <LanguageSelector 
+            currentLanguage={targetLanguage} 
+            onLanguageChange={handleLanguageChange} 
+          />
+        )}
       </div>
       
       {/* Current Learning */}
       <div>
-        <LyricLearningCard song={currentSong!} lyrics={lyrics} />
+        <LyricLearningCard 
+          song={currentSong} 
+          lyrics={lyrics} 
+          targetLanguage={targetLanguage || currentSong.language}
+        />
       </div>
       
       {/* More Songs For Learning */}

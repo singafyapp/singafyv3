@@ -27,6 +27,7 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioError, setAudioError] = useState(false);
   
   // Initialize audio element
   useEffect(() => {
@@ -54,6 +55,7 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
     if (!audioRef.current || !song || !song.audioUrl) return;
     
     console.log("Music player setting audio source:", song.audioUrl);
+    setAudioError(false);
     
     // Reset state
     setIsPlaying(false);
@@ -97,12 +99,14 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
   
   const handleAudioError = (e: Event) => {
     console.error("Audio error:", e);
+    setAudioError(true);
+    setIsPlaying(false);
+    
     toast({
       title: "Playback Error",
       description: "Could not play this song. The audio file might be unavailable.",
       variant: "destructive",
     });
-    setIsPlaying(false);
   };
   
   const togglePlay = () => {
@@ -112,6 +116,14 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      // For Spotify preview URLs, we need to reset the source before playing
+      // to ensure the audio plays correctly
+      if (audioError || audioRef.current.error) {
+        audioRef.current.src = song.audioUrl;
+        audioRef.current.load();
+        setAudioError(false);
+      }
+      
       audioRef.current.play()
         .then(() => {
           setIsPlaying(true);
@@ -119,6 +131,7 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
         })
         .catch(error => {
           console.error("Playback failed:", error);
+          setAudioError(true);
           toast({
             title: "Playback Error",
             description: "Could not play this song. Please try again.",

@@ -3,10 +3,10 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Info, MusicIcon, Play, Pause } from "lucide-react";
+import { ChevronRight, Info, MusicIcon, Play, Pause, Languages } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Song, Lyric, WordFocus } from "@/types";
+import { Song, Lyric, WordFocus, Language } from "@/types";
 import {
   Tooltip,
   TooltipContent,
@@ -18,9 +18,10 @@ import { toast } from "@/hooks/use-toast";
 interface LyricLearningCardProps {
   song: Song;
   lyrics?: Lyric[];
+  targetLanguage?: Language;
 }
 
-export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps) {
+export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLearningCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -167,6 +168,15 @@ export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps)
     };
   }, [isPlaying, lyrics, currentLyricIndex]);
 
+  // Display the language badge showing original and target language if they differ
+  const isTranslated = targetLanguage && targetLanguage.id !== song.language.id;
+  const translationBadge = isTranslated ? (
+    <Badge variant="outline" className="text-xs bg-primary/20 text-primary border-0">
+      <Languages className="h-3 w-3 mr-1" /> 
+      {song.language.flag} → {targetLanguage?.flag}
+    </Badge>
+  ) : null;
+
   return (
     <Card className="bg-spotify-darkgray border-white/5 overflow-hidden">
       <div className="grid md:grid-cols-2 gap-4">
@@ -186,6 +196,7 @@ export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps)
                 <Badge variant="outline" className="text-xs">
                   {song.language.flag} {song.language.name}
                 </Badge>
+                {translationBadge}
                 <Badge variant="outline" className="bg-primary/20 text-primary border-0 text-xs">
                   {song.difficulty}
                 </Badge>
@@ -238,7 +249,9 @@ export function LyricLearningCard({ song, lyrics = [] }: LyricLearningCardProps)
         </div>
         
         <div className="bg-spotify-black px-6 py-8 flex flex-col">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Current Lyric</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">
+            Current Lyric {isTranslated && `(Translated to ${targetLanguage?.name})`}
+          </h3>
           
           <div className="flex-1 flex items-center justify-center">
             <LyricDisplay 

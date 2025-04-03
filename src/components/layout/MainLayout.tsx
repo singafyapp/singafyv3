@@ -33,6 +33,9 @@ export default function MainLayout() {
             description: "This song doesn't have audio available. Using a placeholder.",
             variant: "destructive",
           });
+          
+          // Assign a working preview URL as fallback
+          savedSong.audioUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
         }
         
         setCurrentSong(savedSong);
