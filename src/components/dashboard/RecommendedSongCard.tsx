@@ -1,6 +1,6 @@
 
 import { Song } from "@/types";
-import { Clock, Heart, BookOpen, Mic } from "lucide-react";
+import { Clock, Heart, BookOpen } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -118,21 +118,15 @@ export function RecommendedSongCard({
         
         {showActions && (
           <div className="mt-3 flex justify-end">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="secondary" className="text-xs">Practice with this song</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-spotify-lightgray border-white/10">
-                <DropdownMenuItem onClick={handleLearnClick} className="cursor-pointer">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  <span>Lyric Learning</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onPractice} className="cursor-pointer">
-                  <Mic className="h-4 w-4 mr-2" />
-                  <span>Practice</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              className="text-xs"
+              onClick={handleLearnClick}
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Learn Lyrics
+            </Button>
           </div>
         )}
       </div>
