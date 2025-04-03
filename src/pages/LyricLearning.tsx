@@ -10,6 +10,14 @@ import { generateLyrics } from "@/services/lyricService";
 import { LanguageSelector } from "@/components/learning/LanguageSelector";
 import useSpotify from "@/hooks/useSpotify";
 
+const RELIABLE_AUDIO_URLS = {
+  soundHelix: [
+    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+  ]
+};
+
 export default function LyricLearning() {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
@@ -24,18 +32,9 @@ export default function LyricLearning() {
       try {
         const song: Song = JSON.parse(savedSong);
         
-        // Ensure song has a valid audio URL
-        if (!song.audioUrl || song.audioUrl.trim() === '') {
-          if (spotifyConnected) {
-            // Use a reliable Spotify preview URL for this song
-            song.audioUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-            console.log("Spotify connected, using fallback audio URL:", song.audioUrl);
-          } else {
-            // Use a generic audio sample for demo
-            song.audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
-            console.log("Using generic audio sample");
-          }
-        }
+        // Set a reliable audio URL that we know works
+        song.audioUrl = RELIABLE_AUDIO_URLS.soundHelix[0];
+        console.log("Using reliable audio URL:", song.audioUrl);
         
         setCurrentSong(song);
         setTargetLanguage(song.language); // Set initial target language to song's language
@@ -58,17 +57,12 @@ export default function LyricLearning() {
     // Load recommended songs from favorites
     const favorites = getFavorites();
     if (favorites.length > 0) {
-      // Ensure all favorite songs have audio URLs
-      const favoritesWithAudio = favorites.slice(0, 4).map(song => {
-        if (!song.audioUrl || song.audioUrl.trim() === '') {
-          return {
-            ...song,
-            audioUrl: spotifyConnected 
-              ? "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
-              : "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-          };
-        }
-        return song;
+      // Ensure all favorite songs have reliable audio URLs
+      const favoritesWithAudio = favorites.slice(0, 4).map((song, index) => {
+        return {
+          ...song,
+          audioUrl: RELIABLE_AUDIO_URLS.soundHelix[index % RELIABLE_AUDIO_URLS.soundHelix.length]
+        };
       });
       setRecommendedSongs(favoritesWithAudio);
     } else {
@@ -102,9 +96,7 @@ export default function LyricLearning() {
       duration: 228,
       difficulty: "beginner",
       language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
-      audioUrl: spotifyConnected 
-        ? "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
-        : "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      audioUrl: RELIABLE_AUDIO_URLS.soundHelix[0]
     };
     setCurrentSong(defaultSong);
     setTargetLanguage(defaultSong.language);
@@ -118,23 +110,6 @@ export default function LyricLearning() {
   };
 
   const loadSampleSongs = () => {
-    // Using working audio samples
-    const baseAudioUrl = spotifyConnected 
-      ? "https://p.scdn.co/mp3-preview/"
-      : "https://www.soundhelix.com/examples/mp3/";
-      
-    const spotifySamples = [
-      "8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
-      "f7a1b8a270f310e43ced534327b198dabbf0a3bd",
-      "3eb16018c3908c33a95edce8f79a8113ddae824e"
-    ];
-    
-    const soundHelixSamples = [
-      "SoundHelix-Song-1.mp3",
-      "SoundHelix-Song-2.mp3",
-      "SoundHelix-Song-3.mp3"
-    ];
-    
     const sampleSongs: Song[] = [
       {
         id: "2",
@@ -144,9 +119,7 @@ export default function LyricLearning() {
         duration: 197,
         difficulty: "intermediate",
         language: { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
-        audioUrl: spotifyConnected 
-          ? baseAudioUrl + spotifySamples[0]
-          : baseAudioUrl + soundHelixSamples[0]
+        audioUrl: RELIABLE_AUDIO_URLS.soundHelix[0]
       },
       {
         id: "3",
@@ -156,9 +129,7 @@ export default function LyricLearning() {
         duration: 232,
         difficulty: "advanced",
         language: { id: "3", name: "German", code: "de", flag: "🇩🇪" },
-        audioUrl: spotifyConnected 
-          ? baseAudioUrl + spotifySamples[1]
-          : baseAudioUrl + soundHelixSamples[1]
+        audioUrl: RELIABLE_AUDIO_URLS.soundHelix[1]
       },
       {
         id: "4",
@@ -168,9 +139,7 @@ export default function LyricLearning() {
         duration: 195,
         difficulty: "intermediate",
         language: { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
-        audioUrl: spotifyConnected 
-          ? baseAudioUrl + spotifySamples[2]
-          : baseAudioUrl + soundHelixSamples[2]
+        audioUrl: RELIABLE_AUDIO_URLS.soundHelix[2]
       }
     ];
     setRecommendedSongs(sampleSongs);
@@ -184,25 +153,9 @@ export default function LyricLearning() {
   };
 
   const handleSelectSong = (song: Song) => {
-    // Ensure the song has an audio URL for demo purposes
-    if (!song.audioUrl || song.audioUrl.trim() === '') {
-      if (spotifyConnected) {
-        const sampleUrls = [
-          "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
-          "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
-          "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
-        ];
-        song.audioUrl = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
-      } else {
-        const samples = [
-          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-        ];
-        song.audioUrl = samples[Math.floor(Math.random() * samples.length)];
-      }
-      console.log("Added audio URL to song:", song.title, song.audioUrl);
-    }
+    // Always ensure the song has a reliable audio URL
+    song.audioUrl = RELIABLE_AUDIO_URLS.soundHelix[Math.floor(Math.random() * RELIABLE_AUDIO_URLS.soundHelix.length)];
+    console.log("Selected song with audio URL:", song.audioUrl);
     
     setCurrentSong(song);
     setTargetLanguage(song.language);
