@@ -25,7 +25,7 @@ export function LanguageSelector({
       <Languages className="h-4 w-4 text-muted-foreground" />
       <div className="text-sm text-muted-foreground">Translate to:</div>
       <Select 
-        defaultValue={currentLanguage.id} 
+        value={currentLanguage.id} 
         onValueChange={onLanguageChange}
       >
         <SelectTrigger className="w-[140px] h-9 bg-background/50 backdrop-blur-sm">

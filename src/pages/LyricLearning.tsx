@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { LyricLearningCard } from "@/components/learning/LyricLearningCard";
 import { RecommendedSongCard } from "@/components/dashboard/RecommendedSongCard";
@@ -9,12 +8,14 @@ import { toast } from "@/hooks/use-toast";
 import { getFavorites } from "@/services/favorites";
 import { generateLyrics } from "@/services/lyricService";
 import { LanguageSelector } from "@/components/learning/LanguageSelector";
+import useSpotify from "@/hooks/useSpotify";
 
 export default function LyricLearning() {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [recommendedSongs, setRecommendedSongs] = useState<Song[]>([]);
   const [lyrics, setLyrics] = useState<Lyric[]>([]);
   const [targetLanguage, setTargetLanguage] = useState<Language | null>(null);
+  const { isConnected: spotifyConnected } = useSpotify();
   
   useEffect(() => {
     // Load selected song from local storage
@@ -25,15 +26,22 @@ export default function LyricLearning() {
         
         // Ensure song has a valid audio URL
         if (!song.audioUrl || song.audioUrl.trim() === '') {
-          song.audioUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-          console.log("Setting fallback audio URL for current song:", song.audioUrl);
+          if (spotifyConnected) {
+            // Use a reliable Spotify preview URL for this song
+            song.audioUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
+            console.log("Spotify connected, using fallback audio URL:", song.audioUrl);
+          } else {
+            // Use a generic audio sample for demo
+            song.audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+            console.log("Using generic audio sample");
+          }
         }
         
         setCurrentSong(song);
         setTargetLanguage(song.language); // Set initial target language to song's language
         
-        // Generate lyrics for this song - store in variable first to prevent TS error
-        const songLyrics = generateLyrics(song, targetLanguage);
+        // Generate lyrics for this song
+        const songLyrics = generateLyrics(song, song.language);
         setLyrics(songLyrics);
         console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
       } catch (error) {
@@ -55,7 +63,9 @@ export default function LyricLearning() {
         if (!song.audioUrl || song.audioUrl.trim() === '') {
           return {
             ...song,
-            audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+            audioUrl: spotifyConnected 
+              ? "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+              : "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
           };
         }
         return song;
@@ -65,7 +75,7 @@ export default function LyricLearning() {
       // Sample songs if no favorites
       loadSampleSongs();
     }
-  }, []);
+  }, [spotifyConnected]);
 
   // Update lyrics when target language changes
   useEffect(() => {
@@ -92,7 +102,9 @@ export default function LyricLearning() {
       duration: 228,
       difficulty: "beginner",
       language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
-      audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+      audioUrl: spotifyConnected 
+        ? "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+        : "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
     };
     setCurrentSong(defaultSong);
     setTargetLanguage(defaultSong.language);
@@ -100,9 +112,29 @@ export default function LyricLearning() {
     // Generate lyrics for default song
     const defaultLyrics = generateLyrics(defaultSong, defaultSong.language);
     setLyrics(defaultLyrics);
+    
+    // Save to localStorage
+    localStorage.setItem('selectedSong', JSON.stringify(defaultSong));
   };
 
   const loadSampleSongs = () => {
+    // Using working audio samples
+    const baseAudioUrl = spotifyConnected 
+      ? "https://p.scdn.co/mp3-preview/"
+      : "https://www.soundhelix.com/examples/mp3/";
+      
+    const spotifySamples = [
+      "8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
+      "f7a1b8a270f310e43ced534327b198dabbf0a3bd",
+      "3eb16018c3908c33a95edce8f79a8113ddae824e"
+    ];
+    
+    const soundHelixSamples = [
+      "SoundHelix-Song-1.mp3",
+      "SoundHelix-Song-2.mp3",
+      "SoundHelix-Song-3.mp3"
+    ];
+    
     const sampleSongs: Song[] = [
       {
         id: "2",
@@ -112,7 +144,9 @@ export default function LyricLearning() {
         duration: 197,
         difficulty: "intermediate",
         language: { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
-        audioUrl: "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd"
+        audioUrl: spotifyConnected 
+          ? baseAudioUrl + spotifySamples[0]
+          : baseAudioUrl + soundHelixSamples[0]
       },
       {
         id: "3",
@@ -122,7 +156,9 @@ export default function LyricLearning() {
         duration: 232,
         difficulty: "advanced",
         language: { id: "3", name: "German", code: "de", flag: "🇩🇪" },
-        audioUrl: "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
+        audioUrl: spotifyConnected 
+          ? baseAudioUrl + spotifySamples[1]
+          : baseAudioUrl + soundHelixSamples[1]
       },
       {
         id: "4",
@@ -132,7 +168,9 @@ export default function LyricLearning() {
         duration: 195,
         difficulty: "intermediate",
         language: { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
-        audioUrl: "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef"
+        audioUrl: spotifyConnected 
+          ? baseAudioUrl + spotifySamples[2]
+          : baseAudioUrl + soundHelixSamples[2]
       }
     ];
     setRecommendedSongs(sampleSongs);
@@ -148,19 +186,28 @@ export default function LyricLearning() {
   const handleSelectSong = (song: Song) => {
     // Ensure the song has an audio URL for demo purposes
     if (!song.audioUrl || song.audioUrl.trim() === '') {
-      const sampleUrls = [
-        "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
-        "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
-        "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
-      ];
-      song.audioUrl = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
+      if (spotifyConnected) {
+        const sampleUrls = [
+          "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef",
+          "https://p.scdn.co/mp3-preview/f7a1b8a270f310e43ced534327b198dabbf0a3bd",
+          "https://p.scdn.co/mp3-preview/3eb16018c3908c33a95edce8f79a8113ddae824e"
+        ];
+        song.audioUrl = sampleUrls[Math.floor(Math.random() * sampleUrls.length)];
+      } else {
+        const samples = [
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+          "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+        ];
+        song.audioUrl = samples[Math.floor(Math.random() * samples.length)];
+      }
       console.log("Added audio URL to song:", song.title, song.audioUrl);
     }
     
     setCurrentSong(song);
     setTargetLanguage(song.language);
     
-    // Generate lyrics for this song - store in variable first to prevent TS error
+    // Generate lyrics for this song
     const songLyrics = generateLyrics(song, song.language);
     setLyrics(songLyrics);
     console.log(`Generated ${songLyrics.length} lyrics for "${song.title}"`);
@@ -210,7 +257,7 @@ export default function LyricLearning() {
           <p className="text-muted-foreground">Learn {currentSong?.language.name} through song lyrics</p>
         </div>
         
-        {/* Add language selector */}
+        {/* Language selector */}
         {targetLanguage && (
           <LanguageSelector 
             currentLanguage={targetLanguage} 
