@@ -33,16 +33,25 @@ export default function MainLayout() {
       try {
         const savedSong = JSON.parse(savedSongJson);
         
-        // Always ensure the song has a reliable audio URL
-        const reliableUrl = RELIABLE_AUDIO_URLS[0];
-        savedSong.audioUrl = reliableUrl;
-        
-        // Update localStorage with the reliable URL to ensure consistency
-        localStorage.setItem('selectedSong', JSON.stringify(savedSong));
-        
-        setCurrentSong(savedSong);
-        console.log("Selected song loaded from localStorage:", savedSong.title);
-        console.log("Using reliable audio source:", reliableUrl);
+        // Use consistent audio URL based on song ID
+        if (savedSong.id) {
+          const songIndex = parseInt(savedSong.id) % RELIABLE_AUDIO_URLS.length;
+          const reliableUrl = RELIABLE_AUDIO_URLS[songIndex];
+          savedSong.audioUrl = reliableUrl;
+          
+          // Update localStorage with the reliable URL
+          localStorage.setItem('selectedSong', JSON.stringify(savedSong));
+          
+          console.log("Selected song loaded from localStorage:", savedSong.title);
+          console.log("Using consistent audio source for id:", savedSong.id, reliableUrl);
+          
+          setCurrentSong(savedSong);
+        } else {
+          // If no ID, use the first audio URL
+          savedSong.audioUrl = RELIABLE_AUDIO_URLS[0];
+          localStorage.setItem('selectedSong', JSON.stringify(savedSong));
+          setCurrentSong(savedSong);
+        }
       } catch (e) {
         console.error("Error parsing song from localStorage:", e);
         localStorage.removeItem('selectedSong');

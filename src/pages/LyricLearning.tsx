@@ -32,9 +32,13 @@ export default function LyricLearning() {
       try {
         const song: Song = JSON.parse(savedSong);
         
-        // Set a reliable audio URL that we know works
-        song.audioUrl = RELIABLE_AUDIO_URLS[0];
-        console.log("Using reliable audio URL:", song.audioUrl);
+        // Always use a consistent audio URL for the same song
+        // Use song ID to deterministically select a URL rather than random
+        const songIndex = parseInt(song.id) % RELIABLE_AUDIO_URLS.length;
+        const reliableUrl = RELIABLE_AUDIO_URLS[songIndex];
+        console.log("Using consistent audio URL for song id:", song.id, reliableUrl);
+        
+        song.audioUrl = reliableUrl;
         
         // Update localStorage with reliable URL
         localStorage.setItem('selectedSong', JSON.stringify(song));
@@ -60,11 +64,13 @@ export default function LyricLearning() {
     // Load recommended songs from favorites
     const favorites = getFavorites();
     if (favorites.length > 0) {
-      // Ensure all favorite songs have reliable audio URLs
-      const favoritesWithAudio = favorites.slice(0, 4).map((song, index) => {
+      // Ensure all favorite songs have reliable audio URLs that are CONSISTENT
+      const favoritesWithAudio = favorites.slice(0, 4).map((song) => {
+        // Use song ID to deterministically select a URL rather than random
+        const songIndex = parseInt(song.id) % RELIABLE_AUDIO_URLS.length;
         return {
           ...song,
-          audioUrl: RELIABLE_AUDIO_URLS[index % RELIABLE_AUDIO_URLS.length]
+          audioUrl: RELIABLE_AUDIO_URLS[songIndex]
         };
       });
       setRecommendedSongs(favoritesWithAudio);
@@ -123,7 +129,7 @@ export default function LyricLearning() {
         duration: 197,
         difficulty: "intermediate",
         language: { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
-        audioUrl: RELIABLE_AUDIO_URLS[0]
+        audioUrl: RELIABLE_AUDIO_URLS[1 % RELIABLE_AUDIO_URLS.length]
       },
       {
         id: "3",
@@ -133,7 +139,7 @@ export default function LyricLearning() {
         duration: 232,
         difficulty: "advanced",
         language: { id: "3", name: "German", code: "de", flag: "🇩🇪" },
-        audioUrl: RELIABLE_AUDIO_URLS[1]
+        audioUrl: RELIABLE_AUDIO_URLS[2 % RELIABLE_AUDIO_URLS.length]
       },
       {
         id: "4",
@@ -143,7 +149,7 @@ export default function LyricLearning() {
         duration: 195,
         difficulty: "intermediate",
         language: { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
-        audioUrl: RELIABLE_AUDIO_URLS[2]
+        audioUrl: RELIABLE_AUDIO_URLS[3 % RELIABLE_AUDIO_URLS.length]
       }
     ];
     setRecommendedSongs(sampleSongs);
@@ -157,9 +163,11 @@ export default function LyricLearning() {
   };
 
   const handleSelectSong = (song: Song) => {
-    // Always ensure the song has a reliable audio URL
-    song.audioUrl = RELIABLE_AUDIO_URLS[Math.floor(Math.random() * RELIABLE_AUDIO_URLS.length)];
-    console.log("Selected song with audio URL:", song.audioUrl);
+    // Use consistent audio URL based on song ID rather than random selection
+    const songIndex = parseInt(song.id) % RELIABLE_AUDIO_URLS.length;
+    const reliableUrl = RELIABLE_AUDIO_URLS[songIndex];
+    song.audioUrl = reliableUrl;
+    console.log("Selected song with consistent audio URL:", song.audioUrl);
     
     setCurrentSong(song);
     setTargetLanguage(song.language);
