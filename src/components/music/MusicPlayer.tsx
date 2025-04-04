@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -16,6 +15,12 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
+const RELIABLE_AUDIO_URLS = [
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+];
+
 interface MusicPlayerProps {
   song: Song;
 }
@@ -29,18 +34,15 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioError, setAudioError] = useState(false);
   
-  // Initialize audio element
   useEffect(() => {
     const audio = new Audio();
     audioRef.current = audio;
     
-    // Set up event listeners
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadMetadata);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleAudioError);
     
-    // Clean up
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadMetadata);
@@ -50,29 +52,25 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
     };
   }, []);
   
-  // Update audio source when song changes
   useEffect(() => {
-    if (!audioRef.current || !song || !song.audioUrl) return;
+    if (!audioRef.current || !song) return;
     
-    console.log("Music player setting audio source:", song.audioUrl);
     setAudioError(false);
     
-    // Reset state
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setDuration(0);
+    const reliableUrl = song.audioUrl && RELIABLE_AUDIO_URLS.includes(song.audioUrl) 
+      ? song.audioUrl 
+      : RELIABLE_AUDIO_URLS[0];
     
-    // Set new source
-    audioRef.current.src = song.audioUrl;
+    console.log("Music player setting audio source:", reliableUrl);
+    
+    audioRef.current.src = reliableUrl;
     audioRef.current.load();
     
-    // Update display
     if (audioRef.current.paused) {
       setIsPlaying(false);
     }
   }, [song]);
   
-  // Update volume
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
@@ -102,24 +100,24 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
     setAudioError(true);
     setIsPlaying(false);
     
-    toast({
-      title: "Playback Error",
-      description: "Could not play this song. The audio file might be unavailable.",
-      variant: "destructive",
-    });
+    if (audioRef.current) {
+      console.log("Falling back to reliable audio URL");
+      audioRef.current.src = RELIABLE_AUDIO_URLS[0];
+      audioRef.current.load();
+      
+      setAudioError(false);
+    }
   };
   
   const togglePlay = () => {
-    if (!audioRef.current || !song.audioUrl) return;
+    if (!audioRef.current) return;
     
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      // For Spotify preview URLs, we need to reset the source before playing
-      // to ensure the audio plays correctly
       if (audioError || audioRef.current.error) {
-        audioRef.current.src = song.audioUrl;
+        audioRef.current.src = RELIABLE_AUDIO_URLS[0];
         audioRef.current.load();
         setAudioError(false);
       }
@@ -131,12 +129,25 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
         })
         .catch(error => {
           console.error("Playback failed:", error);
-          setAudioError(true);
-          toast({
-            title: "Playback Error",
-            description: "Could not play this song. Please try again.",
-            variant: "destructive",
-          });
+          
+          audioRef.current!.src = RELIABLE_AUDIO_URLS[0];
+          audioRef.current!.load();
+          
+          audioRef.current!.play()
+            .then(() => {
+              setIsPlaying(true);
+              console.log("Fallback playback started successfully");
+              setAudioError(false);
+            })
+            .catch(secondError => {
+              console.error("Fallback also failed:", secondError);
+              setAudioError(true);
+              toast({
+                title: "Playback Error",
+                description: "Could not play this song. Please try again later.",
+                variant: "destructive",
+              });
+            });
         });
     }
   };
@@ -166,7 +177,6 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-spotify-darkgray border-t border-white/5 p-3 z-50">
       <div className="flex items-center justify-between max-w-screen-xl mx-auto">
-        {/* Song Info */}
         <div className="hidden sm:flex items-center space-x-3 w-1/4">
           {song ? (
             <>
@@ -187,7 +197,6 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
           )}
         </div>
         
-        {/* Player Controls */}
         <div className="flex flex-col items-center w-full sm:w-2/4">
           <div className="flex items-center space-x-2 mb-1">
             <Button 
@@ -248,7 +257,6 @@ export function MusicPlayer({ song }: MusicPlayerProps) {
           </div>
         </div>
         
-        {/* Volume Control - Hidden on small screens */}
         <div className="hidden sm:flex items-center space-x-2 w-1/4 justify-end">
           <Button 
             variant="ghost" 

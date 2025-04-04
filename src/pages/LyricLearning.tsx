@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { LyricLearningCard } from "@/components/learning/LyricLearningCard";
 import { RecommendedSongCard } from "@/components/dashboard/RecommendedSongCard";
@@ -10,13 +11,12 @@ import { generateLyrics } from "@/services/lyricService";
 import { LanguageSelector } from "@/components/learning/LanguageSelector";
 import useSpotify from "@/hooks/useSpotify";
 
-const RELIABLE_AUDIO_URLS = {
-  soundHelix: [
-    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-  ]
-};
+// Define reliable audio URLs that we know work
+const RELIABLE_AUDIO_URLS = [
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+];
 
 export default function LyricLearning() {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
@@ -33,8 +33,11 @@ export default function LyricLearning() {
         const song: Song = JSON.parse(savedSong);
         
         // Set a reliable audio URL that we know works
-        song.audioUrl = RELIABLE_AUDIO_URLS.soundHelix[0];
+        song.audioUrl = RELIABLE_AUDIO_URLS[0];
         console.log("Using reliable audio URL:", song.audioUrl);
+        
+        // Update localStorage with reliable URL
+        localStorage.setItem('selectedSong', JSON.stringify(song));
         
         setCurrentSong(song);
         setTargetLanguage(song.language); // Set initial target language to song's language
@@ -61,7 +64,7 @@ export default function LyricLearning() {
       const favoritesWithAudio = favorites.slice(0, 4).map((song, index) => {
         return {
           ...song,
-          audioUrl: RELIABLE_AUDIO_URLS.soundHelix[index % RELIABLE_AUDIO_URLS.soundHelix.length]
+          audioUrl: RELIABLE_AUDIO_URLS[index % RELIABLE_AUDIO_URLS.length]
         };
       });
       setRecommendedSongs(favoritesWithAudio);
@@ -96,8 +99,9 @@ export default function LyricLearning() {
       duration: 228,
       difficulty: "beginner",
       language: { id: "1", name: "Spanish", code: "es", flag: "🇪🇸" },
-      audioUrl: RELIABLE_AUDIO_URLS.soundHelix[0]
+      audioUrl: RELIABLE_AUDIO_URLS[0]
     };
+    
     setCurrentSong(defaultSong);
     setTargetLanguage(defaultSong.language);
     
@@ -119,7 +123,7 @@ export default function LyricLearning() {
         duration: 197,
         difficulty: "intermediate",
         language: { id: "2", name: "French", code: "fr", flag: "🇫🇷" },
-        audioUrl: RELIABLE_AUDIO_URLS.soundHelix[0]
+        audioUrl: RELIABLE_AUDIO_URLS[0]
       },
       {
         id: "3",
@@ -129,7 +133,7 @@ export default function LyricLearning() {
         duration: 232,
         difficulty: "advanced",
         language: { id: "3", name: "German", code: "de", flag: "🇩🇪" },
-        audioUrl: RELIABLE_AUDIO_URLS.soundHelix[1]
+        audioUrl: RELIABLE_AUDIO_URLS[1]
       },
       {
         id: "4",
@@ -139,7 +143,7 @@ export default function LyricLearning() {
         duration: 195,
         difficulty: "intermediate",
         language: { id: "4", name: "Italian", code: "it", flag: "🇮🇹" },
-        audioUrl: RELIABLE_AUDIO_URLS.soundHelix[2]
+        audioUrl: RELIABLE_AUDIO_URLS[2]
       }
     ];
     setRecommendedSongs(sampleSongs);
@@ -154,7 +158,7 @@ export default function LyricLearning() {
 
   const handleSelectSong = (song: Song) => {
     // Always ensure the song has a reliable audio URL
-    song.audioUrl = RELIABLE_AUDIO_URLS.soundHelix[Math.floor(Math.random() * RELIABLE_AUDIO_URLS.soundHelix.length)];
+    song.audioUrl = RELIABLE_AUDIO_URLS[Math.floor(Math.random() * RELIABLE_AUDIO_URLS.length)];
     console.log("Selected song with audio URL:", song.audioUrl);
     
     setCurrentSong(song);

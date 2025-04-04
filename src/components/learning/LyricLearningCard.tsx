@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,12 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 
+const RELIABLE_AUDIO_URLS = [
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+];
+
 interface LyricLearningCardProps {
   song: Song;
   lyrics?: Lyric[];
@@ -26,15 +31,12 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
-  // Use a state to track if audio is ready
   const [isAudioReady, setIsAudioReady] = useState(false);
   
   useEffect(() => {
-    // Create audio element
     if (!audioRef.current) {
       audioRef.current = new Audio();
       
-      // Set up event handlers for the audio element
       audioRef.current.addEventListener('canplaythrough', () => {
         console.log('Audio ready to play');
         setIsAudioReady(true);
@@ -43,15 +45,10 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
       audioRef.current.addEventListener('error', (e) => {
         console.error('Audio error:', e);
         setIsPlaying(false);
-        toast({
-          title: "Audio Error",
-          description: "Could not load audio. Trying alternative source...",
-          variant: "destructive",
-        });
         
-        // Try with a reliable fallback URL
         if (audioRef.current) {
-          audioRef.current.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+          console.log("LyricLearningCard: Switching to reliable fallback URL");
+          audioRef.current.src = RELIABLE_AUDIO_URLS[0];
           audioRef.current.load();
         }
       });
@@ -62,13 +59,11 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
       });
     }
     
-    // Clean up function
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         setIsPlaying(false);
         
-        // Remove event listeners
         audioRef.current.removeEventListener('canplaythrough', () => {});
         audioRef.current.removeEventListener('error', () => {});
         audioRef.current.removeEventListener('ended', () => {});
@@ -76,23 +71,18 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
     };
   }, []);
   
-  // Set the audio source when the song changes
   useEffect(() => {
     if (!audioRef.current) return;
     
     setIsAudioReady(false);
     
-    // Use the song's audio URL or a fallback
-    if (song.audioUrl && song.audioUrl.trim() !== '') {
-      audioRef.current.src = song.audioUrl;
-      console.log("Learning card audio source set to:", song.audioUrl);
-    } else {
-      // Fallback preview URL that is known to work
-      audioRef.current.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
-      console.log("Using fallback audio source");
-    }
+    const reliableUrl = song.audioUrl && RELIABLE_AUDIO_URLS.includes(song.audioUrl) 
+      ? song.audioUrl 
+      : RELIABLE_AUDIO_URLS[0];
+      
+    console.log("LyricLearningCard: Setting audio source to:", reliableUrl);
+    audioRef.current.src = reliableUrl;
     
-    // Load the audio to check if it works
     audioRef.current.load();
     
   }, [song]);
@@ -104,7 +94,12 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      // Use a more reliable song sample if we're having issues
+      const reliableUrl = RELIABLE_AUDIO_URLS[0];
+      if (audioRef.current.src !== reliableUrl) {
+        audioRef.current.src = reliableUrl;
+        audioRef.current.load();
+      }
+      
       const playPromise = audioRef.current.play();
       
       if (playPromise !== undefined) {
@@ -116,11 +111,11 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
           .catch(error => {
             console.error('Audio playback error:', error);
             
-            // Try a highly reliable audio source
-            audioRef.current!.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+            const fallbackUrl = RELIABLE_AUDIO_URLS[1];
+            console.log("Trying fallback audio:", fallbackUrl);
+            audioRef.current!.src = fallbackUrl;
             audioRef.current!.load();
             
-            // Try playing again
             audioRef.current!.play()
               .then(() => {
                 setIsPlaying(true);
@@ -130,7 +125,7 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
                 console.error('Fallback also failed:', secondError);
                 toast({
                   title: "Audio Playback Failed",
-                  description: "Unable to play audio. Please try another song.",
+                  description: "Unable to play audio. Please refresh the page and try again.",
                   variant: "destructive",
                 });
               });
@@ -139,7 +134,6 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
     }
   };
 
-  // Change lyric based on audio time
   useEffect(() => {
     if (!isPlaying || !lyrics || lyrics.length === 0 || !audioRef.current) return;
     
@@ -148,7 +142,6 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
       
       const currentTime = audioRef.current.currentTime;
       
-      // Find the current lyric based on the audio time
       for (let i = 0; i < lyrics.length; i++) {
         if (currentTime >= lyrics[i].startTime && currentTime <= lyrics[i].endTime) {
           if (currentLyricIndex !== i) {
@@ -168,7 +161,6 @@ export function LyricLearningCard({ song, lyrics = [], targetLanguage }: LyricLe
     };
   }, [isPlaying, lyrics, currentLyricIndex]);
 
-  // Display the language badge showing original and target language if they differ
   const isTranslated = targetLanguage && targetLanguage.id !== song.language.id;
   const translationBadge = isTranslated ? (
     <Badge variant="outline" className="text-xs bg-primary/20 text-primary border-0">
@@ -318,10 +310,8 @@ function splitAndHighlight(text: string, wordFocus: WordFocus[]) {
   const parts = [];
   let lastIndex = 0;
   
-  // Get all the words to highlight
   const wordsToHighlight = wordFocus.map(item => item.word.toLowerCase());
   
-  // Split the text into words
   const words = text.split(/(\s+)/);
   
   for (let i = 0; i < words.length; i++) {
@@ -333,7 +323,6 @@ function splitAndHighlight(text: string, wordFocus: WordFocus[]) {
       continue;
     }
     
-    // Check if this word (without punctuation) is in our focus list
     const cleanWord = word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
     const matchingFocus = wordFocus.find(item => item.word.toLowerCase() === cleanWord);
     

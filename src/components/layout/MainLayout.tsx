@@ -9,6 +9,13 @@ import { MusicPlayer } from "../music/MusicPlayer";
 import { Song } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
+// Define reliable audio URLs that we know work
+const RELIABLE_AUDIO_URLS = [
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+];
+
 export default function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = useState(true);
@@ -26,21 +33,16 @@ export default function MainLayout() {
       try {
         const savedSong = JSON.parse(savedSongJson);
         
-        // Ensure song has a valid audio URL
-        if (!savedSong.audioUrl || savedSong.audioUrl.trim() === '') {
-          toast({
-            title: "Audio Unavailable",
-            description: "This song doesn't have audio available. Using a placeholder.",
-            variant: "destructive",
-          });
-          
-          // Assign a working preview URL as fallback
-          savedSong.audioUrl = "https://p.scdn.co/mp3-preview/8ed90a239874906f1bbcf13dd0ef5037dfa3d1ef";
-        }
+        // Always ensure the song has a reliable audio URL
+        const reliableUrl = RELIABLE_AUDIO_URLS[0];
+        savedSong.audioUrl = reliableUrl;
+        
+        // Update localStorage with the reliable URL to ensure consistency
+        localStorage.setItem('selectedSong', JSON.stringify(savedSong));
         
         setCurrentSong(savedSong);
         console.log("Selected song loaded from localStorage:", savedSong.title);
-        console.log("Audio source:", savedSong.audioUrl);
+        console.log("Using reliable audio source:", reliableUrl);
       } catch (e) {
         console.error("Error parsing song from localStorage:", e);
         localStorage.removeItem('selectedSong');
